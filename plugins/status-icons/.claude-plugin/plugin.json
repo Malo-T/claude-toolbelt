@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "status-icons",
-  "description": "Marque l'onglet du terminal d'une icône qui distingue « c'est fini » de « je suis bloqué sur toi », là où Claude Code n'affiche qu'une étoile pour les deux.",
+  "description": "Marks the terminal tab with an icon that tells \"it is done\" apart from \"it is blocked on you\", where Claude Code shows the same star for both.",
   "version": "0.1.0",
   "license": "MIT",
   "author": {

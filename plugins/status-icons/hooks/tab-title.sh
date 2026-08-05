@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# Préfixe l'onglet du terminal d'une icône disant ce que Claude attend de toi.
+# Prefix the terminal tab with an icon saying what Claude wants from you.
 #
-# Claude Code écrit lui-même le titre en OSC 0, préfixé par ⠂/⠐ tant qu'il
-# travaille et par ✳ dès qu'il s'arrête. Il ne réécrit que lorsque la valeur
-# change : hors état « busy » il n'écrit qu'une fois, donc ce script peut poser
-# un préfixe plus parlant qui tiendra. Rien à nettoyer — Claude reprend la main
-# au prochain changement d'état, c'est-à-dire exactement quand le marqueur doit
-# disparaître.
+# Claude Code writes the title itself as OSC 0, prefixed with ⠂/⠐ while it works
+# and with ✳ once it stops. It only rewrites when the value changes: outside the
+# "busy" state it writes once and then goes quiet, so this script can put a more
+# telling prefix there and have it stick. Nothing to clean up — Claude takes the
+# title back on its next state change, which is exactly when the marker should
+# disappear.
 #
-# Pendant le travail, à l'inverse, Claude réécrit toutes les 960 ms : aucun hook
-# ne peut y tenir un « en cours ». Il n'y a rien à tenter de ce côté.
+# While it works, by contrast, Claude rewrites every 960 ms: no hook can hold a
+# "working" marker there. There is nothing to attempt on that side.
 #
-# Tout échec est silencieux : sur un terminal qu'on ne sait pas atteindre, ou si
-# l'état interne lu ici change de forme, le script ne fait rien et Claude garde
-# ses propres icônes.
+# Every failure is silent: on a terminal we cannot reach, or if the internal
+# state read here changes shape, the script does nothing and Claude keeps its
+# own icons.
 
 set -u
 
@@ -24,18 +24,18 @@ payload=$(cat)
   read -r cwd
 } < <(printf '%s' "$payload" | jq -r '.hook_event_name // "", .session_id // "", .cwd // ""')
 
-# <config>/sessions/<pid>.json est l'état que Claude tient pour lui-même : le
-# nom de topic affiché dans l'onglet, le pid dont la sortie standard est le
-# terminal, et le waitingFor qui dit *pourquoi* il attend. C'est un détail
-# d'implémentation non documenté — d'où le repli silencieux partout ici.
+# <config>/sessions/<pid>.json is the state Claude keeps for itself: the topic
+# name shown in the tab, the pid whose stdout is the terminal, and the
+# waitingFor field that says *why* it is waiting. It is an undocumented
+# implementation detail — hence the silent fallbacks everywhere here.
 sessions_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/sessions"
 session_file=$(jq -r --arg id "$session_id" \
   'select(.sessionId == $id) | input_filename' \
   "$sessions_dir"/*.json 2>/dev/null | head -n1)
 
-# Laisser Claude finir d'écrire son titre pour ce changement d'état, et le
-# fichier de session se mettre à jour, avant de lire puis d'écraser. StopFailure
-# passe après Stop, pour gagner au cas où les deux se déclenchent.
+# Let Claude finish writing its own title for this state change, and the session
+# file catch up, before reading and overwriting. StopFailure waits longer than
+# Stop so that it wins if both happen to fire.
 case $event in
   Stop | Notification) sleep 0.4 ;;
   StopFailure) sleep 0.9 ;;
@@ -55,15 +55,15 @@ fi
 case $event in
   Stop) prefix="✅ " ;;
   StopFailure) prefix="❌ " ;;
-  # L'onglet redevient un shell : ni icône ni nom de topic, juste le dossier.
+  # The tab becomes a shell again: no icon, no topic name, just the directory.
   SessionEnd)
     prefix=""
     title=""
     ;;
   Notification)
     case $waiting_for in
-      # Pas de waitingFor : rien ne bloque, c'est la relance après inactivité.
-      # Laisser en place le marqueur de fin de tour.
+      # No waitingFor: nothing is blocked, this is the idle reminder. Leave the
+      # end-of-turn marker in place.
       "") exit 0 ;;
       "permission prompt") prefix="🔐 " ;;
       "input needed") prefix="❓ " ;;
@@ -76,8 +76,8 @@ case $event in
   *) exit 0 ;;
 esac
 
-# Le hook n'a pas de terminal de contrôle : viser la sortie standard de Claude.
-# /proc sous Linux, lsof ailleurs — macOS n'a pas de /proc.
+# The hook has no controlling terminal of its own, so aim at Claude's stdout.
+# /proc on Linux, lsof elsewhere — macOS has no /proc.
 resolve_tty() {
   local target
   [[ -n ${1:-} ]] || return 1
@@ -89,8 +89,8 @@ resolve_tty() {
   esac
 }
 
-# En fin de session le fichier a pu disparaître ; le parent du hook est alors le
-# seul chemin restant vers le terminal.
+# At session end the file may already be gone; the hook's parent process is then
+# the only remaining path to the terminal.
 tty_path=$(resolve_tty "$pid") || tty_path=$(resolve_tty "$PPID") || exit 0
 
 [[ -n $title ]] || title=$(basename "$cwd")

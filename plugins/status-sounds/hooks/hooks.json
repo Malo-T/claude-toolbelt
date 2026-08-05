@@ -1,5 +1,5 @@
 {
-  "description": "Joue un son court quand Claude a fini, a échoué, ou attend quelque chose de toi.",
+  "description": "Plays a short sound when Claude has finished, has failed, or wants something from you.",
   "hooks": {
     "Stop": [
       {

@@ -1,116 +1,117 @@
 # session-status
 
-Claude Code ne dit pas grand-chose de lui-même quand on ne le regarde pas. Le titre de l'onglet est
-préfixé d'un point d'animation tant qu'il travaille et d'un `✳` dès qu'il s'arrête — mais « j'ai
-fini » et « je suis bloqué sur une demande de permission » produisent la même étoile. Dans une
-rangée d'onglets, rien ne dit lequel te réclame.
+Claude Code says little about itself when you are not looking at it. The terminal tab title is
+prefixed with a blinking dot while it works and with a `✳` once it stops — but "I am done" and "I am
+blocked on a permission prompt" produce the same star. In a row of tabs, nothing tells you which one
+wants you.
 
-Ce dépôt publie deux modules indépendants qui comblent ça, chacun sur son canal.
+This repository publishes two independent modules that fill that gap, each on its own channel.
 
-| Module | Canal |
+| Module | Channel |
 |---|---|
-| [`status-icons`](plugins/status-icons) | une icône dans l'onglet du terminal |
-| [`status-sounds`](plugins/status-sounds) | un son court |
+| [`status-icons`](plugins/status-icons) | an icon in the terminal tab |
+| [`status-sounds`](plugins/status-sounds) | a short sound |
 
-Ils sont séparés parce qu'ils ne se valent pas à l'usage : les icônes ne coûtent rien et se prennent
-partout, le son est intrusif en open space. Installer l'un n'oblige pas à prendre l'autre.
+They are separate because they are not worth the same in practice: icons cost nothing and suit
+anywhere, sound is intrusive in an open-plan office. Installing one does not oblige you to take the
+other.
 
 ## status-icons
 
-| État | Onglet |
+| State | Tab |
 |---|---|
-| Tour terminé | ✅ *topic* |
-| Tour terminé en erreur | ❌ *topic* |
-| Demande de permission | 🔐 *topic* |
-| Question posée | ❓ *topic* |
-| La sandbox demande une sortie | 🧱 *topic* |
-| Un worker demande quelque chose | 🤖 *topic* |
-| Session en pause | 💤 *topic* |
-| Session terminée | *dossier*, sans préfixe |
+| Turn finished | ✅ *topic* |
+| Turn finished with an error | ❌ *topic* |
+| Permission prompt | 🔐 *topic* |
+| Question asked | ❓ *topic* |
+| Sandbox asking to reach out | 🧱 *topic* |
+| A worker asking for something | 🤖 *topic* |
+| Session paused | 💤 *topic* |
+| Session ended | *directory*, no prefix |
 
-**Pas d'icône « en cours de travail ».** Ce n'est pas un oubli : tant que Claude est à l'état `busy`
-il réécrit le titre toutes les 960 ms, en alternant deux caractères braille. N'importe quel hook qui
-écrirait pendant ce temps serait effacé en moins d'une seconde. Le titre n'appartient à autre chose
-que Claude qu'entre les tours, et c'est exactement le créneau que ce module occupe.
+**No "working" icon.** That is not an oversight: while Claude sits in the `busy` state it rewrites
+the title every 960 ms, alternating two braille characters. Any hook writing during that window
+would be wiped within a second. The title belongs to something other than Claude only between turns,
+and that is exactly the window this module occupies.
 
-Corollaire utile : il n'y a rien à nettoyer. Claude reprend la main sur le titre au prochain
-changement d'état — c'est-à-dire à la seconde où le marqueur doit disparaître.
+A useful corollary: there is nothing to clean up. Claude takes the title back on its next state
+change — the very moment the marker should disappear.
 
-**Rien non plus sur la relance après inactivité.** Cette notification part alors que rien ne bloque :
-Claude a fini, c'est toi qui es parti. Le `✅` du tour précédent est laissé en place plutôt que
-remplacé par un faux « on t'attend ».
+**Nothing on the idle reminder either.** That notification fires when nothing is blocked: Claude is
+done, you are the one who walked away. The `✅` from the previous turn is left in place rather than
+replaced by a false "you are needed".
 
 ## status-sounds
 
-| État | Son |
+| State | Sound |
 |---|---|
-| Tour terminé | `complete` / `Glass.aiff` |
-| Tour terminé en erreur | `dialog-warning` / `Basso.aiff` |
-| Attente d'une action de ta part | `message-new-instant` / `Ping.aiff` |
+| Turn finished | `complete` / `Glass.aiff` |
+| Turn finished with an error | `dialog-warning` / `Basso.aiff` |
+| Waiting on you | `message-new-instant` / `Ping.aiff` |
 
-Trois sons là où les icônes distinguent sept états : à l'oreille, la seule question utile est « dois-je
-revenir ? ». Le détail se lit sur l'onglet une fois qu'on y est.
+Three sounds where the icons tell seven states apart: by ear the one useful question is "do I need
+to go back?". The detail is there to read on the tab once you are.
 
-Contrairement aux icônes, le son part aussi sur la relance après inactivité — c'est justement le cas
-où il sert le plus, puisque tu n'es pas devant.
+Unlike the icons, the sound does fire on the idle reminder — that is precisely where it earns its
+keep, since you are not in front of the screen.
 
-Le thème sonore Linux se change par `SESSION_STATUS_SOUND_THEME`, qui pointe sur un dossier
-contenant `complete.oga`, `dialog-warning.oga` et `message-new-instant.oga`. Par défaut, le thème
-freedesktop.
+The Linux sound theme is set through `SESSION_STATUS_SOUND_THEME`, pointing at a directory holding
+`complete.oga`, `dialog-warning.oga` and `message-new-instant.oga`. It defaults to the freedesktop
+theme.
 
-## Installation
+## Install
 
-Ce dépôt est sa propre marketplace. Tant qu'il n'est pas publié, l'ajouter par chemin :
+This repository is its own marketplace. While it is unpublished, add it by path:
 
 ```sh
 claude plugin marketplace add ~/workspace/claude/session-status
 claude plugin install status-icons@session-status
-claude plugin install status-sounds@session-status   # optionnel
+claude plugin install status-sounds@session-status   # optional
 ```
 
-Une fois poussé sur GitHub, la première commande prend le raccourci
-(`claude plugin marketplace add Malo-T/session-status`). Il en faut de toute façon deux :
-`claude plugin install` ne résout les noms que contre des marketplaces déjà configurées.
+Once pushed to GitHub, the first command takes the shorthand instead
+(`claude plugin marketplace add Malo-T/session-status`). Two commands are needed either way:
+`claude plugin install` only resolves names against marketplaces that are already configured.
 
-Actifs à la session suivante. Rien à configurer.
+Both take effect on the next session. Nothing to configure.
 
-## Prérequis et portabilité
+## Requirements and portability
 
-- **`jq`** dans le `PATH`, pour les deux modules.
-- **status-icons** : un terminal qui affiche le titre OSC 0 dans son onglet — c'est le cas de la
-  plupart (Ptyxis, GNOME Terminal, Konsole, kitty, Ghostty, WezTerm, Alacritty, Windows Terminal…).
-  Linux ou macOS : un hook n'a pas de terminal de contrôle, il faut donc viser la sortie standard du
-  process Claude, via `/proc/<pid>/fd/1` sous Linux et `lsof` en repli ailleurs.
-- **status-sounds** : `canberra-gtk-play`, `paplay` ou `aplay` sous Linux, `afplay` sous macOS.
+- **`jq`** on the `PATH`, for both modules.
+- **status-icons**: a terminal that shows the OSC 0 title in its tab — most do (Ptyxis, GNOME
+  Terminal, Konsole, kitty, Ghostty, WezTerm, Alacritty, Windows Terminal…). Linux or macOS: a hook
+  has no controlling terminal of its own, so it has to aim at the Claude process's stdout, through
+  `/proc/<pid>/fd/1` on Linux and `lsof` elsewhere.
+- **status-sounds**: `canberra-gtk-play`, `paplay` or `aplay` on Linux, `afplay` on macOS.
 
-Quand une de ces conditions manque, le script concerné sort sans rien faire. Aucun message, aucun
-ralentissement, et Claude garde son comportement d'origine. Les deux scripts sont écrits pour bash
-3.2, la version que macOS livre encore.
+When one of these is missing, the script concerned exits without doing anything. No message, no
+slowdown, and Claude keeps its original behaviour. Both scripts are written for bash 3.2, the
+version macOS still ships.
 
-## Sur quoi reposent les icônes
+## What the icons rest on
 
-L'état vient de `~/.claude/sessions/<pid>.json`, que Claude Code tient à jour pour lui-même : il y
-écrit son statut (`idle`, `busy`, `waiting`, `shell`), le champ `waitingFor` qui dit *pourquoi* il
-attend, et le nom de topic affiché dans l'onglet.
+The state comes from `~/.claude/sessions/<pid>.json`, which Claude Code maintains for its own use:
+it writes its status there (`idle`, `busy`, `waiting`, `shell`), the `waitingFor` field that says
+*why* it is waiting, and the topic name shown in the tab.
 
-C'est un détail d'implémentation non documenté, vérifié sur Claude Code **2.1.222**. Il peut changer
-de forme sans préavis. Le script est écrit pour que ça reste sans conséquence : un champ absent ou
-renommé le fait sortir en silence, et une valeur de `waitingFor` inconnue retombe sur `❓` plutôt que
-de ne rien afficher.
+This is an undocumented implementation detail, verified against Claude Code **2.1.222**. It may
+change shape without notice. The script is written so that this stays harmless: a missing or renamed
+field makes it exit in silence, and an unknown `waitingFor` value falls back to `❓` rather than
+showing nothing.
 
-Les icônes sont toutes emoji par défaut, sans sélecteur de variante `U+FE0F` : celui-ci est rendu de
-façon inégale d'un terminal à l'autre et donne parfois un glyphe monochrome étroit, voire un carré,
-au milieu d'un jeu coloré. C'est pourquoi on trouve ici `❌` et non `⚠️`, `💤` et non `⏸️`.
+Every icon is emoji by default, with no `U+FE0F` variation selector: that selector is rendered
+unevenly from one terminal to the next and sometimes yields a narrow monochrome glyph, or a tofu box,
+in the middle of a coloured set. Hence `❌` rather than `⚠️` here, and `💤` rather than `⏸️`.
 
-## Modifier les jeux d'icônes et de sons
+## Changing the icon and sound sets
 
-Tout tient dans les `case` de `plugins/status-icons/hooks/tab-title.sh` et
-`plugins/status-sounds/hooks/play.sh`, en clair. Côté icônes, la table `waitingFor → préfixe` couvre
-l'ensemble des valeurs que Claude produit ; en ajouter une nouvelle est une ligne.
+It all sits in the `case` statements of `plugins/status-icons/hooks/tab-title.sh` and
+`plugins/status-sounds/hooks/play.sh`, in plain sight. On the icon side, the `waitingFor → prefix`
+table covers every value Claude produces; adding a new one is a single line.
 
-Attention en développement : `claude plugin install` **copie** le dépôt dans `~/.claude/plugins/cache/`.
-Une modification ici reste sans effet tant que `claude plugin marketplace update session-status` n'a
-pas été lancé.
+One thing to watch while developing: `claude plugin install` **copies** the repository into
+`~/.claude/plugins/cache/`. An edit here has no effect until
+`claude plugin marketplace update session-status` has run.
 
 ## Licence
 

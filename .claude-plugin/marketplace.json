@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "session-status",
-  "description": "Deux modules indépendants qui signalent l'état d'une session Claude Code hors du terminal : une icône dans l'onglet, un son.",
+  "description": "Two independent modules that surface a Claude Code session state outside the terminal: an icon in the tab, a sound.",
   "owner": {
     "name": "Malo Toanen"
   },
@@ -9,14 +9,14 @@
     {
       "name": "status-icons",
       "source": "./plugins/status-icons",
-      "description": "Marque l'onglet du terminal d'une icône qui distingue « c'est fini » de « je suis bloqué sur toi », là où Claude Code n'affiche qu'une étoile pour les deux.",
+      "description": "Marks the terminal tab with an icon that tells \"it is done\" apart from \"it is blocked on you\", where Claude Code shows the same star for both.",
       "category": "productivity",
       "homepage": "https://github.com/Malo-T/session-status"
     },
     {
       "name": "status-sounds",
       "source": "./plugins/status-sounds",
-      "description": "Joue un son court quand Claude a fini, a échoué, ou attend quelque chose de toi — pour lever les yeux au bon moment sans surveiller l'onglet.",
+      "description": "Plays a short sound when Claude has finished, has failed, or wants something from you — so you look up at the right moment without watching the tab.",
       "category": "productivity",
       "homepage": "https://github.com/Malo-T/session-status"
     }

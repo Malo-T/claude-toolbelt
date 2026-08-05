@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Joue un son court quand Claude a fini, a échoué, ou attend quelque chose de
-# toi — pour lever les yeux au bon moment sans surveiller l'onglet.
+# Play a short sound when Claude has finished, has failed, or wants something
+# from you — so you look up at the right moment without watching the tab.
 #
-# Trois sons seulement, là où le module status-icons distingue sept états : à
-# l'oreille, la seule question utile est « dois-je revenir ? ». Le détail se lit
-# sur l'onglet une fois qu'on y est.
+# Three sounds only, where the status-icons module tells seven states apart: by
+# ear the one useful question is "do I need to go back?". The detail is there to
+# read on the tab once you are.
 #
-# Tout échec est silencieux — pas de lecteur audio, pas de fichier son, système
-# inconnu : le script sort sans rien dire.
+# Every failure is silent — no audio player, no sound file, unknown system: the
+# script exits without a word.
 #
-# Écrit pour bash 3.2, la version que macOS livre encore : ni tableau associatif
-# ni substitution de casse ici.
+# Written for bash 3.2, the version macOS still ships: no associative arrays and
+# no case-conversion expansions here.
 
 set -u
 
@@ -23,7 +23,7 @@ case $event in
   *) exit 0 ;;
 esac
 
-# macOS n'a pas le thème sonore freedesktop, et Linux n'a pas /System/Library.
+# macOS has no freedesktop sound theme, and Linux has no /System/Library.
 case $(uname -s) in
   Darwin)
     case $key in
@@ -44,7 +44,7 @@ esac
 
 [[ -r $sound ]] || exit 0
 
-# canberra respecte le thème sonore du bureau ; les autres sont des replis.
+# canberra honours the desktop sound theme; the rest are fallbacks.
 if command -v canberra-gtk-play >/dev/null 2>&1; then
   canberra-gtk-play -f "$sound" >/dev/null 2>&1
 elif command -v afplay >/dev/null 2>&1; then

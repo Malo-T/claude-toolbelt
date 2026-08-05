@@ -1,5 +1,5 @@
 {
-  "description": "Marque l'onglet du terminal d'une icône disant ce que Claude attend : ✅ fini, ❌ échoué, 🔐 permission, ❓ question, 🧱 sandbox, 🤖 worker, 💤 en pause.",
+  "description": "Marks the terminal tab with an icon saying what Claude is waiting for: ✅ done, ❌ failed, 🔐 permission, ❓ question, 🧱 sandbox, 🤖 worker, 💤 paused.",
   "hooks": {
     "Stop": [
       {
