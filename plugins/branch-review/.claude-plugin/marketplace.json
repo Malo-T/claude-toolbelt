@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "branch-review",
+  "description": "Publishes the single branch-review plugin held in this repository.",
+  "owner": {
+    "name": "Malo Toanen"
+  },
+  "plugins": [
+    {
+      "name": "branch-review",
+      "source": "./",
+      "description": "Guided, file-by-file walkthrough of the changes on a git branch, then files the fixes into the commits they belong to.",
+      "category": "development",
+      "homepage": "https://github.com/Malo-T/branch-review"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "branch-review",
+  "description": "Guided, file-by-file walkthrough of the changes on a git branch, then files the fixes into the commits they belong to.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Malo Toanen"
+  },
+  "homepage": "https://github.com/Malo-T/branch-review"
+}
