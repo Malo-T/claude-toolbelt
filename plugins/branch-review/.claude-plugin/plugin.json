@@ -3,6 +3,7 @@
   "name": "branch-review",
   "description": "Guided, file-by-file walkthrough of the changes on a git branch, then files the fixes into the commits they belong to.",
   "version": "0.1.0",
+  "license": "MIT",
   "author": {
     "name": "Malo Toanen"
   },

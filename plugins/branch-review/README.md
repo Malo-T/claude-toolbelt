@@ -71,4 +71,10 @@ tags, and refuses a dirty tree.
 └── plugin.json               # the plugin manifest
 skills/branch-review/
 └── SKILL.md                  # the skill itself
+LICENSE                       # MIT
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE). Fork it, reword the skill, ship your own; attribution is the
+only condition.
