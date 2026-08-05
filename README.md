@@ -61,17 +61,16 @@ theme.
 
 ## Install
 
-This repository is its own marketplace. While it is unpublished, add it by path:
+This repository is its own marketplace:
 
 ```sh
-claude plugin marketplace add ~/workspace/claude/session-status
+claude plugin marketplace add Malo-T/session-status
 claude plugin install status-icons@session-status
 claude plugin install status-sounds@session-status   # optional
 ```
 
-Once pushed to GitHub, the first command takes the shorthand instead
-(`claude plugin marketplace add Malo-T/session-status`). Two commands are needed either way:
-`claude plugin install` only resolves names against marketplaces that are already configured.
+Two commands are needed: `claude plugin install` only resolves names against marketplaces that are
+already configured.
 
 Both take effect on the next session. Nothing to configure.
 
@@ -110,8 +109,14 @@ It all sits in the `case` statements of `plugins/status-icons/hooks/tab-title.sh
 table covers every value Claude produces; adding a new one is a single line.
 
 One thing to watch while developing: `claude plugin install` **copies** the repository into
-`~/.claude/plugins/cache/`. An edit here has no effect until
-`claude plugin marketplace update session-status` has run.
+`~/.claude/plugins/cache/`. An edit to this clone has no effect on the installed module — the
+marketplace is fetched from GitHub, so the edit has to be pushed, then picked up with
+`claude plugin marketplace update session-status`. To try a change out without pushing it, point the
+marketplace at the working copy instead:
+
+```sh
+claude plugin marketplace add ~/workspace/claude/session-status
+```
 
 ## Licence
 
