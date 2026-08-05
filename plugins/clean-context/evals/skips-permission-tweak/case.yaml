@@ -17,6 +17,6 @@ graders:
   - type: tool_used
     name: skill-stays-quiet
     tool: Skill
-    input_match: context-hygiene
+    input_match: ignore-setup
     max: 0
     arm: with-only

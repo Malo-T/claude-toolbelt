@@ -1,15 +1,15 @@
 ---
-name: context-hygiene
+name: ignore-setup
 description: Set up a project so Claude stops discovering lockfiles, generated code, minified assets and binaries on every search — a managed .ignore, the Glob setting that makes Glob obey it, and a short read-deny list for secrets. Use when someone asks for a .claudeignore, asks to exclude files from the context, says Claude wastes time reading generated or vendored files, says searches return too much noise, or wants a project configured right after /init ("ajoute un .claudeignore", "exclure des fichiers du contexte", "nettoyer le contexte du projet"). Skip for a one-off permission tweak like "allow npm commands" (that is update-config) and for cutting permission prompts (that is fewer-permission-prompts).
 ---
 
-# Context Hygiene
+# Ignore Setup
 
 Configure a project so the default file discovery is clean, while every excluded path stays
 readable on purpose. Three layers, one command.
 
 ```
-/context-hygiene:context-hygiene
+/clean-context:ignore-setup
 ```
 
 ## `.claudeignore` does not exist
@@ -54,7 +54,7 @@ the next reader has to think about for nothing.
 ```sh
 rg --files --no-ignore --hidden | wc -l   # what Glob sees today
 rg --files --hidden | wc -l               # what Grep sees today
-rg --files --no-ignore --hidden > /tmp/ctxhyg-before.txt
+rg --files --no-ignore --hidden > /tmp/clean-context-before.txt
 ```
 
 Keep the list, not just the count — Step 4 has to prove no source file disappeared.
@@ -66,9 +66,9 @@ Pick patterns from `references/patterns.md`, filtered by what Step 1 found.
 **`.ignore` at the repository root**, inside a managed block:
 
 ```
-# --- claude context hygiene (managed) ---
+# --- clean-context (managed) ---
 …patterns…
-# --- /claude context hygiene ---
+# --- /clean-context ---
 ```
 
 Rewrite only the inside of the block; leave every line outside it untouched. Never edit
@@ -79,8 +79,8 @@ below the block and makes a second run a no-op:
 
 ```sh
 awk '
-  /^# --- claude context hygiene \(managed\) ---$/ {print; inblock=1; while ((getline l < "'"$NEW"'") > 0) print l; next}
-  /^# --- \/claude context hygiene ---$/            {inblock=0; print; next}
+  /^# --- clean-context \(managed\) ---$/ {print; inblock=1; while ((getline l < "'"$NEW"'") > 0) print l; next}
+  /^# --- \/clean-context ---$/           {inblock=0; print; next}
   !inblock {print}
 ' .ignore > .ignore.new && mv .ignore.new .ignore
 ```

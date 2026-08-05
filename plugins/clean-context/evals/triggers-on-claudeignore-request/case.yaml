@@ -19,7 +19,7 @@ graders:
   - type: tool_used
     name: skill-fires
     tool: Skill
-    input_match: context-hygiene
+    input_match: ignore-setup
     min: 1
     arm: with-only
 
