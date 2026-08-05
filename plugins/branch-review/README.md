@@ -46,10 +46,12 @@ ln -s "$PWD" ~/.claude/skills/branch-review
 picks up whatever is on disk. Do not keep both the installed plugin and the symlink: same
 plugin name, and the two will collide.
 
-Before pushing:
+Before pushing, both — given a directory, the command stops at `marketplace.json` and never
+opens the plugin manifest, so a broken `plugin.json` passes:
 
 ```sh
 claude plugin validate . --strict
+claude plugin validate .claude-plugin/plugin.json --strict
 ```
 
 ## Release
