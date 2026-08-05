@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "context-hygiene",
+  "description": "Publishes the single context-hygiene plugin held in this repository.",
+  "owner": {
+    "name": "Malo Toanen"
+  },
+  "plugins": [
+    {
+      "name": "context-hygiene",
+      "source": "./",
+      "description": "Keeps a project's noise out of Claude's default context — a managed .ignore, a Glob setting, and a short read-deny list for secrets — while leaving every excluded path readable on purpose.",
+      "category": "development",
+      "homepage": "https://github.com/Malo-T/context-hygiene"
+    }
+  ]
+}

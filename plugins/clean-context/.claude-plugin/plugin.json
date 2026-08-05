@@ -1,0 +1,11 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "context-hygiene",
+  "description": "Keeps a project's noise out of Claude's default context — a managed .ignore, a Glob setting, and a short read-deny list for secrets — while leaving every excluded path readable on purpose.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": {
+    "name": "Malo Toanen"
+  },
+  "homepage": "https://github.com/Malo-T/context-hygiene"
+}
