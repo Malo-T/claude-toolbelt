@@ -1,11 +1,11 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
-  "name": "tab-status",
+  "name": "status-icons",
   "description": "Marque l'onglet du terminal d'une icône qui distingue « c'est fini » de « je suis bloqué sur toi », là où Claude Code n'affiche qu'une étoile pour les deux.",
   "version": "0.1.0",
   "license": "MIT",
   "author": {
     "name": "Malo Toanen"
   },
-  "homepage": "https://github.com/Malo-T/tab-status"
+  "homepage": "https://github.com/Malo-T/session-status"
 }
