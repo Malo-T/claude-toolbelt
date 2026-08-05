@@ -19,16 +19,16 @@ levers, and what each one covers, are tabulated in `skills/ignore-setup/SKILL.md
 ## Install
 
 This repository is its own marketplace — it carries a `.claude-plugin/marketplace.json` pointing at
-the plugin at the repository root. While it lives only on this machine, add it by path:
+the plugin at the repository root:
 
 ```sh
-claude plugin marketplace add /home/malo/workspace/claude/clean-context
+claude plugin marketplace add Malo-T/clean-context
 claude plugin install clean-context@clean-context
 ```
 
-Once it is pushed to GitHub, the same two commands take the shorthand instead
-(`claude plugin marketplace add Malo-T/clean-context`). Either way two commands are needed:
-`claude plugin install` only resolves names against marketplaces that are already configured.
+Both commands are needed: `claude plugin install` only resolves names against marketplaces that are
+already configured. `marketplace add` also takes a local path, which is how to install a clone
+without going through GitHub.
 
 The skill loads on the next session. It fires from the description in
 `skills/ignore-setup/SKILL.md` — "ajoute un .claudeignore", "exclure des fichiers du contexte",
