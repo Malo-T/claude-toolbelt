@@ -1,0 +1,11 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "status-sounds",
+  "description": "Joue un son court quand Claude a fini, a échoué, ou attend quelque chose de toi — pour lever les yeux au bon moment sans surveiller l'onglet.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": {
+    "name": "Malo Toanen"
+  },
+  "homepage": "https://github.com/Malo-T/session-status"
+}
