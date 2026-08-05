@@ -30,45 +30,38 @@ Examples:
 
 Never start reading before you know exactly what you are reading and the user has seen it.
 
-**Find the base.** The first question is whether the current branch *is* the default branch,
-because the answer changes what "the work to review" means.
+**The default is the current branch against its parent, up to their last common commit.**
+Everything else is the user's to name — "les 3 derniers commits", "ce qui touche au
+composant paiement", "juste ce que je n'ai pas poussé". Take what they said; only work out
+the default when they said nothing.
+
+Git has no notion of a parent branch, so it has to be inferred: among the integration
+branches that exist — `origin/HEAD`, `origin/develop`, `origin/main`, `origin/master` — take
+the one whose merge-base with HEAD is **closest**, in commits. That winner is `<base>`, the
+single name used for it everywhere below:
 
 ```bash
-git branch --show-current
-git symbolic-ref --short refs/remotes/origin/HEAD   # e.g. origin/main
+git rev-list --count $(git merge-base <candidate> HEAD)..HEAD   # smallest wins → <base>
 ```
 
-**On a topic branch** — the base is the default branch, and specifically its remote-tracking
-ref (`origin/main`), which is what the merge request will be diffed against. If
-`symbolic-ref` fails because no remote HEAD is set, fall back to whichever of `origin/main`,
-`origin/master`, `origin/develop` exists. Fall back to the *remote-tracking* refs, not the
-local `main` / `master` — a local branch name can be the branch you are standing on, which
-would diff HEAD against itself and report an empty review.
+Three details decide whether this works:
 
-**On the default branch itself** — there is no branch to compare against, so the base is the
-upstream:
+- Compare by **distance, not by commit date**. Two merge-bases made in the same second tie,
+  and the tie then gets broken at random.
+- Use the **remote-tracking** refs. A local `develop` left behind moves the merge-base and
+  silently widens the review; a local `main` may be the branch you are standing on.
+- Skip any candidate whose merge-base is HEAD itself. On the default branch this leaves its
+  own remote-tracking ref as the parent, which is the right answer: what is committed here
+  and not yet pushed.
 
-```bash
-git rev-list --count @{upstream}..HEAD    # what is committed here but not pushed
-```
+When two candidates share the same merge-base, the answer does not exist — git records a
+branch's creation point as a commit, not a branch name, so the graph cannot say whether the
+work came off `main` or off a `develop` that pointed at the same commit. Ask rather than
+present the alphabetical winner as a fact.
 
-`@{upstream}` is more reliable than reconstructing the name: it resolves whatever this branch
-actually tracks, and it keeps working when `origin/HEAD` is unset.
-
-**When that comes out empty too** — on the default branch with everything pushed — no
-branch-shaped scope exists, and it usually means the user wants to re-read work that has
-already landed. Don't report "nothing to review"; ask what range they mean, with usable
-suggestions drawn from the log:
-
-| They mean | Scope |
-|---|---|
-| the last few commits | `HEAD~5..HEAD` |
-| today's / yesterday's work | `--since=yesterday`, or `HEAD@{yesterday}..HEAD` |
-| one commit they can name | `<sha>^!` |
-| everything since a release | `v1.4.0..HEAD` |
-
-Reviewing already-pushed commits also settles Step 6 in advance: their history cannot be
-rewritten without a force-push, so any fix becomes a new commit.
+**If the scope comes out empty** — everything already pushed, nothing above the parent — the
+user usually wants to re-read work that has landed. Don't answer "nothing to review"; offer
+ranges: `HEAD~5..HEAD`, `--since=yesterday`, `<sha>^!`, `v1.4.0..HEAD`.
 
 **Take the inventory** (run these together):
 
@@ -78,16 +71,30 @@ git diff --stat --find-renames <base>...HEAD
 git status --short
 ```
 
-Use **three dots** (`<base>...HEAD`) for the diff. Two dots would also show commits that
-landed on the base branch since the user branched off — noise that isn't their work. Three
-dots diffs against the merge-base, which is exactly "what this branch adds".
+Use **three dots** for the diff: `develop...HEAD` *is* `git diff $(git merge-base develop
+HEAD) HEAD`, the comparison against the last common commit. That is what makes divergence a
+non-problem — two dots would instead show the parent's own new commits inverted, as
+deletions in files the user never touched.
+
+**When the parent has moved on**, say so and offer a rebase before reading — then take no
+for an answer:
+
+```
+`origin/develop` a avancé de 4 commits depuis ton point de départ. Rebaser avant de relire ?
+```
+
+The offer is not there to fix the diff — the reading is identical either way. It is there
+because a rebase is often wanted before the merge request anyway, and doing it first means
+reading the code in the state it will be merged in, conflicts resolved included. Don't make
+the offer at all when the branch is already pushed (it would need a force-push) or the tree
+is dirty (the rebase would have to stash it): say which, and move on.
 
 **Honour explicit restrictions** the user gave:
 
 | The user says | Scope |
 |---|---|
-| nothing, on a topic branch | `<base>...HEAD` |
-| nothing, on the default branch | `@{upstream}...HEAD` |
+| nothing | `<base>...HEAD` |
+| "ce que je n'ai pas encore poussé" | `@{upstream}..HEAD` |
 | "les 2 derniers commits" | `HEAD~2..HEAD` |
 | "ce commit" / a SHA | `<sha>^!` |
 | "seulement le back" / a path | append `-- back/` to the diff commands |
