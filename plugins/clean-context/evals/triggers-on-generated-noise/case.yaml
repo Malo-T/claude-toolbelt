@@ -1,0 +1,23 @@
+schema_version: "1.0"
+name: triggers-on-generated-noise
+description: >
+  The symptom stated without naming any mechanism — no ".claudeignore", no "ignore", no
+  "permissions". The description has to carry the trigger on its own.
+tags: [trigger]
+
+execution:
+  prompt: >
+    Sur ce repo tu passes ton temps à ouvrir des lockfiles et du code généré avant d'arriver au
+    vrai code. On peut faire quelque chose ?
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    tool: Skill
+    input_match: context-hygiene
+    min: 1
+    arm: with-only

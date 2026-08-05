@@ -1,0 +1,32 @@
+schema_version: "1.0"
+name: triggers-on-claudeignore-request
+description: >
+  The wrong turn that motivated the skill — asking for a .claudeignore. The skill has to fire and
+  the answer has to correct the premise instead of writing a file that does nothing.
+tags: [trigger, correction]
+
+execution:
+  prompt: >
+    Ajoute un .claudeignore à ce projet, j'aimerais que tu arrêtes de lire des fichiers inutiles.
+  max_turns: 6
+  # No Bash/Write/Edit granted: an eval prompt is a real instruction, so it must not be able to
+  # touch a repository.
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    tool: Skill
+    input_match: context-hygiene
+    min: 1
+    arm: with-only
+
+  - type: regex
+    name: corrects-the-claudeignore-premise
+    target: last_message
+    pattern: "(n'existe pas|nexiste pas|does not exist|doesn't exist|pas support|not supported)"
+    flags: "i"
+    match: contains
+    arm: with-only
