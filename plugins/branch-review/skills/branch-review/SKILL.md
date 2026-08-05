@@ -30,15 +30,45 @@ Examples:
 
 Never start reading before you know exactly what you are reading and the user has seen it.
 
-**Find the base branch:**
+**Find the base.** The first question is whether the current branch *is* the default branch,
+because the answer changes what "the work to review" means.
 
 ```bash
+git branch --show-current
 git symbolic-ref --short refs/remotes/origin/HEAD   # e.g. origin/main
 ```
 
-If that fails (no remote HEAD set), fall back to whichever of `main`, `master`, `develop`
-exists — check with `git rev-parse --verify`. If several exist and it's genuinely ambiguous,
-ask rather than guess.
+**On a topic branch** — the base is the default branch, and specifically its remote-tracking
+ref (`origin/main`), which is what the merge request will be diffed against. If
+`symbolic-ref` fails because no remote HEAD is set, fall back to whichever of `origin/main`,
+`origin/master`, `origin/develop` exists. Fall back to the *remote-tracking* refs, not the
+local `main` / `master` — a local branch name can be the branch you are standing on, which
+would diff HEAD against itself and report an empty review.
+
+**On the default branch itself** — there is no branch to compare against, so the base is the
+upstream:
+
+```bash
+git rev-list --count @{upstream}..HEAD    # what is committed here but not pushed
+```
+
+`@{upstream}` is more reliable than reconstructing the name: it resolves whatever this branch
+actually tracks, and it keeps working when `origin/HEAD` is unset.
+
+**When that comes out empty too** — on the default branch with everything pushed — no
+branch-shaped scope exists, and it usually means the user wants to re-read work that has
+already landed. Don't report "nothing to review"; ask what range they mean, with usable
+suggestions drawn from the log:
+
+| They mean | Scope |
+|---|---|
+| the last few commits | `HEAD~5..HEAD` |
+| today's / yesterday's work | `--since=yesterday`, or `HEAD@{yesterday}..HEAD` |
+| one commit they can name | `<sha>^!` |
+| everything since a release | `v1.4.0..HEAD` |
+
+Reviewing already-pushed commits also settles Step 6 in advance: their history cannot be
+rewritten without a force-push, so any fix becomes a new commit.
 
 **Take the inventory** (run these together):
 
@@ -56,7 +86,8 @@ dots diffs against the merge-base, which is exactly "what this branch adds".
 
 | The user says | Scope |
 |---|---|
-| nothing | `<base>...HEAD` |
+| nothing, on a topic branch | `<base>...HEAD` |
+| nothing, on the default branch | `@{upstream}...HEAD` |
 | "les 2 derniers commits" | `HEAD~2..HEAD` |
 | "ce commit" / a SHA | `<sha>^!` |
 | "seulement le back" / a path | append `-- back/` to the diff commands |
@@ -417,5 +448,7 @@ ref only when they say they're satisfied.
   is included, because `...` can't see uncommitted work.
 - Pass `--find-renames` so a moved file reads as a rename, not as a delete plus an add.
 - Answer in the language the user is speaking.
-- If the scope comes out empty (branch identical to base, or the path filter matches
-  nothing), say so and ask what they meant instead of reviewing something adjacent.
+- If the scope comes out empty (branch identical to base, everything already pushed, or the
+  path filter matching nothing), say so and offer the ranges from Step 1 instead of reviewing
+  something adjacent. An empty scope is nearly always a base that doesn't fit the situation,
+  not an absence of work.
