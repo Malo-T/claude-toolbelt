@@ -17,9 +17,8 @@ are.
 Unlike the icons, the sound *does* fire on the idle reminder — that is precisely where it earns its
 keep, since you are not in front of the screen.
 
-The two are separate plugins because they are not worth the same in practice: icons cost nothing and
-suit anywhere, sound is intrusive in an open-plan office. Installing one does not oblige you to take
-the other.
+The two are separate plugins on purpose — sound is intrusive where an icon is not — so installing
+one does not oblige you to take the other.
 
 ## Install
 
@@ -27,6 +26,9 @@ the other.
 claude plugin marketplace add Malo-T/claude-toolbelt
 claude plugin install status-sounds@claude-toolbelt
 ```
+
+Why two commands, and how to update or install from a clone: root
+[README](../../README.md#install).
 
 It takes effect on the next session. Nothing to configure.
 
@@ -47,8 +49,18 @@ theme at `/usr/share/sounds/freedesktop/stereo`. macOS uses `/System/Library/Sou
 variable.
 
 Beyond that it all sits in the `case` statements of [`hooks/play.sh`](hooks/play.sh), in plain sight.
-See the root [README](../../README.md#working-on-a-plugin) for how to try an edit out without pushing
-it.
+
+## Layout
+
+```
+.claude-plugin/plugin.json    # the plugin manifest
+hooks/
+├── hooks.json                # the events the script listens on
+└── play.sh                   # the script itself
+```
+
+Development, validation and release are the same across the collection — see the root
+[README](../../README.md#working-on-a-plugin).
 
 ## License
 

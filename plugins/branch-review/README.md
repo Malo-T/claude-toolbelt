@@ -14,10 +14,10 @@ claude plugin marketplace add Malo-T/claude-toolbelt
 claude plugin install branch-review@claude-toolbelt
 ```
 
-Two commands are needed: `claude plugin install` only resolves names against marketplaces that are
-already configured, never a git URL.
+Why two commands, and how to update or install from a clone: root
+[README](../../README.md#install).
 
-The skill loads on the next Claude Code session. It fires on its own from the description in
+It takes effect on the next session. The skill fires on its own from the description in
 [`skills/branch-review/SKILL.md`](skills/branch-review/SKILL.md) — "relis ma branche", "walk me
 through my changes", "check my work before I open the PR" — or explicitly as
 `/branch-review:branch-review`.

@@ -24,12 +24,13 @@ claude plugin marketplace add Malo-T/claude-toolbelt
 claude plugin install clean-context@claude-toolbelt
 ```
 
-Two commands are needed: `claude plugin install` only resolves names against marketplaces that are
-already configured, never a git URL.
+Why two commands, and how to update or install from a clone: root
+[README](../../README.md#install).
 
-The skill loads on the next session. It fires from the description in `SKILL.md` — "ajoute un
-.claudeignore", "exclure des fichiers du contexte", "tu passes ton temps à lire du code généré" — or
-explicitly as `/clean-context:ignore-setup`.
+It takes effect on the next session. The skill fires on its own from the description in
+[`skills/ignore-setup/SKILL.md`](skills/ignore-setup/SKILL.md) — "ajoute un .claudeignore",
+"exclure des fichiers du contexte", "tu passes ton temps à lire du code généré" — or explicitly as
+`/clean-context:ignore-setup`.
 
 ## Evals
 

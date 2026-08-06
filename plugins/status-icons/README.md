@@ -38,6 +38,9 @@ claude plugin marketplace add Malo-T/claude-toolbelt
 claude plugin install status-icons@claude-toolbelt
 ```
 
+Why two commands, and how to update or install from a clone: root
+[README](../../README.md#install).
+
 It takes effect on the next session. Nothing to configure.
 
 ## Requirements and portability
@@ -70,8 +73,19 @@ in the middle of a coloured set. Hence `❌` rather than `⚠️` here, and `�
 
 It all sits in the `case` statements of [`hooks/tab-title.sh`](hooks/tab-title.sh), in plain sight.
 The `waitingFor → prefix` table covers every value Claude produces; adding a new one is a single
-line. See the root [README](../../README.md#working-on-a-plugin) for how to try an edit out without
-pushing it.
+line.
+
+## Layout
+
+```
+.claude-plugin/plugin.json    # the plugin manifest
+hooks/
+├── hooks.json                # the events the script listens on
+└── tab-title.sh              # the script itself
+```
+
+Development, validation and release are the same across the collection — see the root
+[README](../../README.md#working-on-a-plugin).
 
 ## License
 
