@@ -74,6 +74,26 @@ claude plugin validate . --strict
 for p in plugins/*/; do claude plugin validate "$p/.claude-plugin/plugin.json" --strict; done
 ```
 
+## Evals
+
+The skill plugins carry trigger cases under `plugins/<name>/evals/`, one directory per case. The
+hook plugins carry none, and should not: a hook fires on an event, so there is no model decision to
+measure. `--ablation` is what makes a case worth writing — it replays the same prompts without the
+plugin, so a pass says the skill changed the outcome rather than that the base model already knew.
+
+```sh
+for e in plugins/*/evals; do claude plugin eval "${e%/evals}" --ablation with-without; done
+```
+
+`claude plugin eval` is early access and refuses to run on this account — still true on 2.1.223 —
+so the cases ship authored-but-unrun. They are written against the schema the current binary
+validates: `schema_version`, `execution`, `graders`.
+
+No case grants Bash, Write or Edit. An eval prompt is a real instruction executed by a real agent,
+and a trigger set is mostly near-misses that borrow the skill's vocabulary — `branch-review`'s
+includes "squash les 4 derniers commits", which a run with tools open would carry out on whatever
+repository it found.
+
 ## Release
 
 Versions are per plugin, in each `plugins/<name>/.claude-plugin/plugin.json`. Bump the one you are

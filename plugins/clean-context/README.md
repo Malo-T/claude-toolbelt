@@ -27,13 +27,6 @@ contexte", "tu passes ton temps à lire du code généré" — or explicitly as
 must correct the premise), the symptom described without naming any mechanism (must fire), and a
 one-off permission tweak (must stay quiet — that is `update-config`'s job).
 
-```sh
-claude plugin eval . --ablation with-without
-```
-
-`claude plugin eval` is early access and refuses to run on this account for now, so the cases ship
-authored-but-unrun. They are written against the schema the current binary validates
-(`schema_version`, `execution`, `graders`), and no case grants Bash, Write or Edit — an eval prompt
-is a real instruction executed by a real agent, and it must not be able to touch a repository.
+How to run them, and why they ship unrun: root [README](../../README.md#evals).
 
 Part of [claude-toolbelt](../../README.md), where install, development and licence live.
