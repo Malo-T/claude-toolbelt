@@ -7,32 +7,9 @@ then file the fixes made along the way into the commits they belong to.
 It is meant for the pass you make *before* asking anyone else for a review. For a finished findings
 report instead of a paced reading, use a review skill; this one hands you the wheel.
 
-## Install
-
-```sh
-claude plugin marketplace add Malo-T/claude-toolbelt
-claude plugin install branch-review@claude-toolbelt
-```
-
-Why two commands, and how to update or install from a clone: root
-[README](../../README.md#install).
-
-It takes effect on the next session. The skill fires on its own from the description in
+It fires on its own from the description in
 [`skills/branch-review/SKILL.md`](skills/branch-review/SKILL.md) — "relis ma branche", "walk me
 through my changes", "check my work before I open the PR" — or explicitly as
 `/branch-review:branch-review`.
 
-## Layout
-
-```
-.claude-plugin/plugin.json    # the plugin manifest
-skills/branch-review/
-└── SKILL.md                  # the skill itself
-```
-
-Development, validation and release are the same across the collection — see the root
-[README](../../README.md#working-on-a-plugin).
-
-## License
-
-MIT — see the root [LICENSE](../../LICENSE).
+Part of [claude-toolbelt](../../README.md), where install, development and licence live.

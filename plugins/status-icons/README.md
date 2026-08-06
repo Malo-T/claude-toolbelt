@@ -31,18 +31,6 @@ done, you are the one who walked away. The `✅` from the previous turn is left 
 replaced by a false "you are needed". Its sibling [`status-sounds`](../status-sounds) makes the
 opposite call, and is right to — you are not in front of the screen to see a tab.
 
-## Install
-
-```sh
-claude plugin marketplace add Malo-T/claude-toolbelt
-claude plugin install status-icons@claude-toolbelt
-```
-
-Why two commands, and how to update or install from a clone: root
-[README](../../README.md#install).
-
-It takes effect on the next session. Nothing to configure.
-
 ## Requirements and portability
 
 - **`jq`** on the `PATH`.
@@ -75,18 +63,4 @@ It all sits in the `case` statements of [`hooks/tab-title.sh`](hooks/tab-title.s
 The `waitingFor → prefix` table covers every value Claude produces; adding a new one is a single
 line.
 
-## Layout
-
-```
-.claude-plugin/plugin.json    # the plugin manifest
-hooks/
-├── hooks.json                # the events the script listens on
-└── tab-title.sh              # the script itself
-```
-
-Development, validation and release are the same across the collection — see the root
-[README](../../README.md#working-on-a-plugin).
-
-## License
-
-MIT — see the root [LICENSE](../../LICENSE).
+Part of [claude-toolbelt](../../README.md), where install, development and licence live.

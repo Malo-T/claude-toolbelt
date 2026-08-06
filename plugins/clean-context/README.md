@@ -17,19 +17,8 @@ There is no `.claudeignore` in Claude Code — the skill says so and sets up wha
 levers, and what each one covers, are tabulated in
 [`skills/ignore-setup/SKILL.md`](skills/ignore-setup/SKILL.md).
 
-## Install
-
-```sh
-claude plugin marketplace add Malo-T/claude-toolbelt
-claude plugin install clean-context@claude-toolbelt
-```
-
-Why two commands, and how to update or install from a clone: root
-[README](../../README.md#install).
-
-It takes effect on the next session. The skill fires on its own from the description in
-[`skills/ignore-setup/SKILL.md`](skills/ignore-setup/SKILL.md) — "ajoute un .claudeignore",
-"exclure des fichiers du contexte", "tu passes ton temps à lire du code généré" — or explicitly as
+It fires on its own from that description — "ajoute un .claudeignore", "exclure des fichiers du
+contexte", "tu passes ton temps à lire du code généré" — or explicitly as
 `/clean-context:ignore-setup`.
 
 ## Evals
@@ -47,20 +36,4 @@ authored-but-unrun. They are written against the schema the current binary valid
 (`schema_version`, `execution`, `graders`), and no case grants Bash, Write or Edit — an eval prompt
 is a real instruction executed by a real agent, and it must not be able to touch a repository.
 
-## Layout
-
-```
-.claude-plugin/plugin.json    # the plugin manifest
-skills/ignore-setup/
-├── SKILL.md                  # the skill itself
-└── references/patterns.md    # the pattern catalogue, read on demand
-evals/                        # trigger cases
-ROADMAP.md                    # the skills this plugin is missing
-```
-
-Development, validation and release are the same across the collection — see the root
-[README](../../README.md#working-on-a-plugin).
-
-## License
-
-MIT — see the root [LICENSE](../../LICENSE).
+Part of [claude-toolbelt](../../README.md), where install, development and licence live.
