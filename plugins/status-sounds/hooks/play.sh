@@ -33,7 +33,7 @@ case $(uname -s) in
     esac
     ;;
   *)
-    theme=${SESSION_STATUS_SOUND_THEME:-/usr/share/sounds/freedesktop/stereo}
+    theme=${STATUS_SOUNDS_THEME:-/usr/share/sounds/freedesktop/stereo}
     case $key in
       done) sound="$theme/complete.oga" ;;
       attention) sound="$theme/message-new-instant.oga" ;;

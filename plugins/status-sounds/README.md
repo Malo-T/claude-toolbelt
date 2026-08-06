@@ -41,7 +41,7 @@ anything. No message, no slowdown, and Claude keeps its original behaviour. It i
 
 ## Changing the sound set
 
-The Linux sound theme is set through `SESSION_STATUS_SOUND_THEME`, pointing at a directory holding
+The Linux sound theme is set through `STATUS_SOUNDS_THEME`, pointing at a directory holding
 `complete.oga`, `dialog-warning.oga` and `message-new-instant.oga`. It defaults to the freedesktop
 theme at `/usr/share/sounds/freedesktop/stereo`. macOS uses `/System/Library/Sounds` and ignores the
 variable.
