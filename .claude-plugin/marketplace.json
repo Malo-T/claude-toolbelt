@@ -1,24 +1,38 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "session-status",
-  "description": "Two independent modules that surface a Claude Code session state outside the terminal: an icon in the tab, a sound.",
+  "name": "claude-toolbelt",
+  "description": "A belt of unrelated Claude Code plugins: a guided branch review, a context hygiene setup, and two ways of surfacing a session's state outside the terminal.",
   "owner": {
     "name": "Malo Toanen"
   },
   "plugins": [
     {
+      "name": "branch-review",
+      "source": "./plugins/branch-review",
+      "description": "Guided, file-by-file walkthrough of the changes on a git branch, then files the fixes into the commits they belong to.",
+      "category": "development",
+      "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/branch-review"
+    },
+    {
+      "name": "clean-context",
+      "source": "./plugins/clean-context",
+      "description": "Keeps a project's noise out of Claude's default context. Today: a managed .ignore, a Glob setting, and a short read-deny list for secrets, leaving every excluded path readable on purpose.",
+      "category": "development",
+      "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/clean-context"
+    },
+    {
       "name": "status-icons",
       "source": "./plugins/status-icons",
       "description": "Marks the terminal tab with an icon that tells \"it is done\" apart from \"it is blocked on you\", where Claude Code shows the same star for both.",
       "category": "productivity",
-      "homepage": "https://github.com/Malo-T/session-status"
+      "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/status-icons"
     },
     {
       "name": "status-sounds",
       "source": "./plugins/status-sounds",
       "description": "Plays a short sound when Claude has finished, has failed, or wants something from you — so you look up at the right moment without watching the tab.",
       "category": "productivity",
-      "homepage": "https://github.com/Malo-T/session-status"
+      "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/status-sounds"
     }
   ]
 }
