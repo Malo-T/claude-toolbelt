@@ -9,7 +9,7 @@
     {
       "name": "branch-review",
       "source": "./plugins/branch-review",
-      "description": "Guided, file-by-file walkthrough of the changes on a git branch, then files the fixes into the commits they belong to.",
+      "description": "Tells you what your branch actually changed — what was done, why, and what deserves a second look, instead of the diff — then files the fixes into the commits they belong to.",
       "category": "development",
       "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/branch-review"
     },

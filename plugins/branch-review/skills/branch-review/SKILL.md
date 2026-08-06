@@ -1,18 +1,40 @@
 ---
 name: branch-review
-description: Guided, file-by-file walkthrough of the changes on a git branch — works out the scope itself, walks the diffs in small batches, and pauses on each batch with one question per file so the user reads the code and steers. Can then file the fixes made along the way into the commits they belong to, via fixup and autosquash. Use it whenever someone wants to go back over their own unmerged work — "relis ma branche", "on repasse sur mes commits", "vérifier ce que j'ai fait hier soir", "qu'est-ce que j'ai changé au juste sur cette branche", "repasser sur ce que j'ai fait avant de demander une revue", "check my work before I open the MR/PR", "walk me through my changes" — including when they only name a commit range, a path, or a branch, and including when they have uncommitted fixes to read through and then tidy into the right commits. Reach for it rather than answering with a bare git diff or a summary — what is wanted is a paced reading they drive. Skip when they hand over a single file or snippet and want an automated findings report rather than a paced reading they drive, and skip for a security-only audit — Claude Code ships `security-review` for that one.
+description: >-
+  Takes stock of what a branch actually changed, before it gets pushed — works out the scope
+  itself, then lays the change out group by group in one pass: files touched, what was done and
+  why, how, and what deserves a second look, quoting code only where a remark needs it rather than
+  reprinting the diffs. Closes on a single question set so the user steers without wading through
+  hunks, and can then file the fixes decided along the way into the commits they belong to, via
+  fixup and autosquash. Use it whenever someone wants to find out what happened on their own
+  unmerged work — "relis ma branche", "on repasse sur mes commits", "vérifier ce que j'ai fait hier
+  soir", "qu'est-ce que j'ai changé au juste sur cette branche", "fais le point avant que je
+  pousse", "repasser sur ce que j'ai fait avant de demander une revue", "check my work before I open
+  the MR/PR", "walk me through my changes" — including when the code was produced fast with an
+  assistant and they no longer know what is in there, when they only name a commit range, a path, or
+  a branch, and when they have uncommitted fixes to read through and then tidy into the right
+  commits. Reach for it rather than answering with a bare git diff or an off-the-cuff recap — what
+  is wanted is an account they can steer from. Skip when they hand over a single file or snippet and
+  want an automated findings report, and skip for a security-only audit — Claude Code ships
+  `security-review` for that one.
 ---
 
 # Branch Review
 
-Walk the user through the changes on a git branch, in small batches, so **they** read the
-code. This skill is a reading guide, not an auditor: you resolve the scope, put the files in
-an order that makes the change comprehensible, add just enough context per file, and then
-hand back control — every batch ends on decisions to tick, not on a wall of prose.
+Tell the user what happened on their branch, so they can settle it before pushing. The
+situation this exists for: the work got produced fast — often with an assistant holding the
+keyboard — the result works, and nobody really knows what it changed. Taking stock is the
+job.
 
-The failure mode to avoid is dumping a full report. If the user wanted a verdict they would
-have asked for one — they asked to re-read their own work, and the value you add is
-sequencing, context, and a second pair of eyes on each chunk.
+So the deliverable is **what was done, why, how, and what deserves a second look**, group by
+group, and then one question set to steer from. Not the code: the user has `git diff`, and
+what they lack is the account of it. Quote a few lines only where a remark is unreadable
+without them, and let them ask for any diff they want to see.
+
+Two failure modes to avoid. Reprinting the branch: a wall of hunks is unreadable in a
+terminal, and every line of it pushes the decisions further down the scroll. And chopping the
+account into prompts: a question between every two groups scatters the remarks across a
+corridor of round-trips. **One account, one question set, one round of fixes.**
 
 ## Invocation
 
@@ -25,6 +47,7 @@ Examples:
 - `/branch-review les 2 derniers commits`
 - `/branch-review seulement le back`
 - "je voudrais repasser sur ce que j'ai fait avant d'ouvrir la MR"
+- "on a produit ça en deux heures, qu'est-ce qui a changé au juste avant que je pousse ?"
 
 ## Step 1 — Resolve the scope
 
@@ -128,10 +151,15 @@ Base : main (merge-base a1b2c3d) · 5 commits · 12 fichiers · +430 −87
 2 fichiers non commités ignorés.
 ```
 
-## Step 2 — Order the reading
+## Step 2 — Work out the groups
 
-Alphabetical order is the enemy of comprehension. Sequence the files so each one is
-understandable by the time the user reaches it:
+**The unit of the account is a change, not a file.** A branch of twelve files is rarely
+twelve things: it is two or three, plus their tests and their wiring. Find those, and the
+whole review fits on a screen; list the files instead and you have rebuilt `--stat` with
+commentary.
+
+Group by the change each file serves, then order the files inside a group so the group reads
+top-down:
 
 1. What defines the change — migrations, schemas, models, API contracts, types
 2. The business logic that implements it
@@ -139,135 +167,172 @@ understandable by the time the user reaches it:
 4. The tests
 5. Config, docs, CI
 
-When the branch carries several unrelated changes, group by feature first and apply the
-order inside each group. Say which grouping you used.
+Order the groups themselves by weight: the change the branch is *about* first, the drive-by
+tidying last. Say which grouping you used, in a clause — the user is the one who wrote this
+and needs to recognise it, not to be taught a taxonomy.
 
 Collapse the noise: lockfiles, generated code, snapshots, vendored assets and binaries get
-one summary line each in the plan and are never expanded as a step.
+one line for the lot ("6 fichiers générés, non relus"), never a group of their own.
 
-Show the numbered reading plan once, then begin.
+**No separate reading plan.** A numbered plan followed by the account lists every file twice,
+and the announcement in Step 1 plus the group headings already say what is coming. The lines
+saved are the whole point of the exercise.
 
-## Step 3 — Present a batch of files
+## Step 3 — Read everything, then write the account
 
-Files go out in batches of one to four, then a single question set covers the whole batch —
-the user navigates between questions with the arrow keys and submits everything at once. Four
-is the hard cap (one `AskUserQuestion` carries at most four questions), but it's a ceiling,
-not a target.
+### Read it all — this part is not optional
 
-**A batch is one idea, not four slots to fill.** Build it from the files that have to be
-understood together — the migration and the model it reshapes, the endpoint and its test, the
-five skills that all gained the same frontmatter. The user should be able to name what the
-batch was about after reading it. If the honest answer is "these four files happened to be
-next in the list", the batch is wrong: drop it to the two that belong together and let the
-others form their own.
-
-That cohesion outranks filling the cap. Then size against reading cost:
-
-- Four near-identical five-line changes belong in one batch — reading them separately is
-  four interruptions for one idea.
-- A three-hundred-line rewrite is its own batch. Two of those in one message and the second
-  one gets skimmed.
-- Never straddle two groups of the reading plan. Putting "database schema" and "CI config"
-  in the same breath spends the context switch Step 2 was built to avoid.
-
-Name the batch when you open it — "Lot 2 — le chemin d'authentification (3 fichiers)". If
-naming it takes a conjunction, it's two batches.
-
-Get the diff for each file, with enough context to be readable, using the spec settled in
-Step 1:
+You read the code so the user doesn't have to. That trade only holds if you actually read it,
+and an account written off the commit subjects is worse than no account: it is confident and
+wrong in the exact place the user stopped checking.
 
 ```bash
-git diff --find-renames -U10 <spec> -- <path>
+git diff --find-renames -U10 <spec> -- <path>    # per file, using the spec from Step 1
+git log <base>..HEAD                             # full messages, for the stated intent
 ```
 
-Three shapes don't fit "show the diff and comment":
+**Read the whole current file, not just its diff.** A diff lies by omission: it hides the
+guard clause twenty lines up, the existing helper that already does this, the caller that
+assumes the old shape. And **commit messages are a claim, not evidence** — check each against
+what its commit actually did. A commit that says one thing and does two is one of the most
+useful things this review can surface, and it is invisible to everyone who trusts the log.
 
-- **A deleted file** — don't pour the removed lines back onto the screen; the user deleted
-  them on purpose. Say what it was, why it's gone, and what now covers it. Show a few lines
-  only when the deletion itself is the debatable part.
-- **A new file the user wrote in this conversation** — reprinting it wastes the step. Give
-  its structure in two lines and go straight to the points of attention.
-- **A new file from elsewhere** — no diff exists to read; read the file and present it in
-  hunks like any large change.
+### Then write it, in one message
 
-**Read the whole current file before writing your comments** (not just the diff). A diff
-lies by omission: it hides the guard clause twenty lines up, the existing helper that
-already does this, the caller that assumes the old shape. A point of attention invented
-from unread context costs the user more time than it saves.
+Every group, in Step 2's order, in **one uninterrupted message**. No question between two
+groups, no "on continue ?", no pause to confirm the user is still there. They read it at their
+own pace and answer once at the end.
 
-Then present the step in this shape:
+Aim for something the user can take in without scrolling far — a couple of screens for a
+twelve-file branch, a handful of lines per group. That budget is what makes the question set
+land while the account is still on screen, so spend it on the groups that carry the change and
+give the tidying one line.
+
+Each group takes this shape:
 
 ```
-### 3/12 — src/services/payment.ts   (+64 −12)
+## L'authentification par jeton   (3 fichiers, +180 −24)
 
-<the diff>
+Le login passe du cookie de session à un JWT court doublé d'un refresh token : `token.ts`
+émet et vérifie, le middleware lit désormais l'en-tête `Authorization`. Motif annoncé dans
+« feat(auth): drop session cookies » — permettre les clients mobiles.
 
-**Ce que ça change** — 1 à 3 phrases : l'intention derrière le changement, pas la
-paraphrase du diff. L'utilisateur voit déjà les lignes.
+- `auth/token.ts` — nouveau (+120) : émission, vérification, TTL 15 min
+- `auth/middleware.ts` (+40 −20) : en-tête au lieu du cookie, 401 si absent
+- `auth/login.test.ts` (+20 −4) : couvre l'émission, pas le refresh
 
 **À vérifier**
-- `payment.ts:88` — le retry ne distingue pas un 4xx d'un 5xx, une carte refusée sera
-  rejouée 3 fois
+- `middleware.ts:41` — le cookie n'est plus lu, mais `legacy/export.ts:88` l'envoie encore :
+  l'export tombera en 401
+- `token.ts:64` — le refresh n'a pas de test, et c'est la moitié du mécanisme
 ```
 
-Keep **À vérifier** to three items at most, and **zero is a valid answer** — write
-"Rien à signaler." and move on. Flagging something on every single file trains the user to
-skim past the section; restraint is what makes the real findings land. Anchor every item to
-`file:line` so it can be jumped to.
+Three things carry it, and none of them is a hunk:
 
-Good points of attention are things the user cannot see from the diff alone: a case the new
-branch doesn't handle, an inconsistency with how the rest of the codebase does it, a caller
-that wasn't updated, an assumption the tests don't cover. Not style, not naming, not "you
-could extract this" — unless the user asks for that kind of pass.
+- **The paragraph** — what the change does, how it does it, and why, in two to four sentences.
+  Name the mechanism, not the outcome only: "passe par un middleware" tells the user where to
+  look, "améliore l'authentification" tells them nothing. If the why is a guess rather than
+  something a commit message or the code states, say so — "sans doute pour…".
+- **One line per file** — path, churn, and what that file's part is. A three-hundred-line
+  rewrite still gets one line; a big diff buys a more careful summary, not more space.
+- **À vérifier** — three items at most, each anchored to `file:line`, and **zero is a valid
+  answer**: write "Rien à signaler." and move on. Flagging something in every group trains the
+  user to skim the section that matters most.
 
-For a file with a large diff, split by hunk and use a sub-counter (`3/12 — hunk 2/4`),
-keeping each chunk to something readable in one screen. A file that needs splitting takes a
-batch to itself, and still gets **one** question covering the whole file — the hunks are a
-reading aid, not four separate decisions, and asking four times about one file is the
-interruption the batching was meant to remove.
+### What earns a place in À vérifier
 
-**Then stop.** One batch per message, never two in a row. The pause is the point of the
-skill — the user is reading.
+Things the user cannot see for themselves: a case the branch doesn't handle, a caller that
+wasn't updated, an inconsistency with how the rest of the codebase does this, an assumption the
+tests don't cover.
 
-## Step 4 — Close the batch with one question set
+Code produced at speed has its own tells, and they are worth more here than anywhere else:
+something changed that nobody asked for, a helper reimplemented next to the one that already
+existed, debug output or a `TODO` left in, a test that asserts the new behaviour by restating
+it. Say plainly when a change looks incidental — "ce renommage n'a rien à voir avec le reste,
+volontaire ?" is exactly the question the user opened this review to be asked.
 
-Close each batch with a single `AskUserQuestion` carrying **one question per file** — two for a
-file that also raises something you want answered. The user walks the questions with the arrow
-keys, ticks what they want on each, and submits once. That shape is what makes the review feel
-like a form to fill rather than a corridor of prompts.
+Not style, not naming, not "you could extract this" — unless the user asks for that kind of
+pass.
 
-The options are where you propose what to *do* about what was just read. A step that ends in
-a bare question mark puts the burden back on the user to formulate; one that ends in "Corrige
-: le retry rejoue les 4xx" hands them a decision.
+### Quoting code
 
-**Submitting is what advances. Never add a "Suivant" option.** A checkbox meaning "do
-nothing" duplicates the submit button and steals one of four slots that a real proposal could
-have used. Nothing ticked simply means nothing to do on that file — carry on to the next
-batch without ceremony.
+An excerpt is for a remark that cannot be made in prose — the line that is subtly wrong, the
+two branches that got swapped. Five lines at most, inside the **À vérifier** item it belongs
+to, never as a separate block:
+
+````
+- `payment.ts:88` — le retry ne distingue pas un 4xx d'un 5xx, une carte refusée sera rejouée
+  trois fois :
+  ```ts
+  } catch (e) { return retry(charge, 3) }
+  ```
+````
+
+Never quote to prove the summary or to show scale. The user can see the whole thing whenever
+they want — the question set offers it (Step 4), and asking works too. Withholding the diff by
+default is not withholding information; it is putting the decisions where they can be read.
+
+Three shapes need saying out loud, since no diff goes out to imply them:
+
+- **A deleted file** — say what it was and what covers it now. The removed lines stay gone.
+- **A rename or a move** — say it in the file line (`ancien → nouveau`), so the user doesn't
+  read a delete and an add as two changes.
+- **A new file** — its structure in a clause, then straight to the remarks.
+
+**Then stop, once, at the end.** The account has gone out; the user is reading it.
+
+## Step 4 — Close the account with one question set
+
+One `AskUserQuestion`, once, after the last group. The user walks the questions with the arrow
+keys, ticks what they want on each, and submits everything in one go. That single form is what
+the whole account was building towards, and keeping the account short is what keeps it within
+sight of the form.
+
+The budget is fixed by the interface: **at most 4 questions, each carrying 2 to 4 options** —
+sixteen proposed actions, ceiling. A twelve-file review has to fit in there, and it does,
+because a question is **one decision, not one file**.
+
+**Group by decision, not by file.** Three services that all retry on 4xx are one question with
+three options, not three questions. Five skills that gained the same frontmatter key are one
+question. Anchor each option to its own `file:line` so a grouped question stays precise:
+
+- `question` — *Le retry rejoue les 4xx à trois endroits — on le limite aux 5xx ?*
+- `header` — `retry 4xx` (12 chars max)
+- options — *`payment.ts:88`* · *`webhook.ts:41`* · *`sync.ts:112`*
+
+A file gets a question to itself only when its decision belongs to no other — a rewrite to
+accept or refuse, a naming choice that spreads nowhere else.
+
+The options are where you propose what to *do* about what was read. A question that ends in a
+bare question mark puts the burden back on the user to formulate; one that ends in "Corrige :
+le retry rejoue les 4xx" hands them a decision. Draw them from what you actually found, in
+this order:
+
+1. **One per point flagged**, phrased as the concrete action rather than the observation:
+   "Limiter le retry aux 5xx".
+2. **Noter au récap sans corriger** — a real third path between fixing now and dropping it,
+   and the one that usually fits a finding the user needs to think about.
+3. **Voir le diff** — "Montrer le diff de `token.ts`". The account left the code out; this is
+   how it comes back, and one of these is worth a slot whenever a remark is the kind the user
+   will want to judge with the lines in front of them.
+4. **Navigation** — "Revenir sur l'authentification", "Terminer maintenant".
+
+`multiSelect: true`, always. Options are actions and actions compose: "corrige ce point et
+réponds à ma question" is one ordinary intent that single-select splits into two round-trips.
+
+**Submitting is what advances. Never add a "Suivant" option.** A checkbox meaning "do nothing"
+duplicates the submit button and steals one of sixteen slots a real proposal could have used.
+Nothing ticked simply means nothing to do.
 
 This assumes the interface accepts a question with no box ticked. If it turns out to refuse
-one, the fix is a neutral navigation option ("Voir le plan", "Revenir sur X") that gives the
-user something true to tick — not a "Suivant" wearing a different label, which puts the
-useless checkbox straight back.
+one, the fix is a neutral navigation option ("Montrer le diff de X", "Revenir sur X") that
+gives the user something true to tick — not a "Suivant" wearing a different label, which puts
+the useless checkbox straight back.
 
-Per question:
-
-- `multiSelect: true` — always. Options are actions and actions compose: "corrige ce point et
-  réponds à ma question" is one ordinary intent that single-select splits into two
-  round-trips.
-- `header`: the counter — `Fichier 3/9`, or `3/9 · h2/4` when splitting hunks (12 chars max)
-- `question`: name the file, ask what to do with it
-- 2 to 4 options, drawn from what you actually found, in this order:
-  1. **One per point flagged**, phrased as the concrete action rather than the observation:
-     "Corrige : limiter le retry aux 5xx".
-  2. **Noter au récap sans corriger** — a real third path between fixing now and dropping it,
-     and the one that usually fits a finding the user needs to think about.
-  3. **Navigation** — "Revenir sur `settings.json`", "Sauter au 7", "Terminer maintenant".
-
-**A file with nothing to decide gets no question.** Say "Rien à signaler" in the presentation
-and leave it out of the question set — that's the whole point of dropping the no-op option.
-When an entire batch is clean, ask one navigation-only question for the batch so the pause
-still happens and the user keeps the wheel.
+**Nothing to decide means no question at all.** Say "Rien à signaler" group by group in the
+account, and if that holds for every group, skip the `AskUserQuestion` entirely and go to the
+recap. A prompt whose only purpose is to be dismissed is the interruption this step exists to
+remove.
 
 **Never write a combination option.** "Les deux corrections", "tout appliquer" — these only
 exist to work around single-select, and each burns a slot. With `multiSelect` the user
@@ -278,8 +343,9 @@ The rare exception is options that genuinely exclude each other — "cadrer sur 
 descriptions so the exclusivity is visible, and if both come back ticked, ask which one
 rather than picking.
 
-Two well-aimed options beat four padded ones. The free-text entry is always there, so don't
-try to enumerate every possibility.
+Grouping fills the four option slots with four real findings; it is not a licence to pad. Two
+well-aimed options still beat four stretched ones, and the free-text entry is always there, so
+don't try to enumerate every possibility.
 
 ### Asking something you actually want answered
 
@@ -294,7 +360,7 @@ So a question you want answered never travels as an option. It gets **its own qu
 set, and the options are the *candidate answers*:
 
 - `question` — *`config.ts:12` — le chemin en dur vers `/var/data`, c'est voulu ?*
-- `header` — the file counter as usual, with a marker: `3/9 · ?`
+- `header` — a short label with a marker: `chemin dur ?`
 - options — *Oui, c'est le point de montage en prod* · *Non, oubli — le passer en variable
   d'environnement*
 
@@ -304,43 +370,55 @@ so don't spend an option restating that it exists. If it turns out the interface
 free text on a question with no box ticked, say so when you ask, and keep the candidate answers
 anyway.
 
-A file that raises a real question therefore takes two slots in the set — its actions, and its
-question. Four questions is the hard cap, so that file's batch holds at most three files. If
-the question is worth asking it's worth the slot; if it doesn't survive that trade, it wasn't a
-question, it was curiosity.
+An open question spends one of the four slots on its own, and unlike a fix it can't be grouped
+with anything. If it's worth asking it's worth the slot; if it doesn't survive that trade, it
+wasn't a question, it was curiosity.
 
-When a choice merges or skips steps, the announced total stops being true. Say the new one
-out loud once — "on passe de 9 à 7 étapes" — and renumber from there. A counter whose
-denominator changes without warning is worse than no counter at all.
+### When it doesn't fit
 
-**Processing the submission.** Everything comes back at once, across several files. Run it in
-the order that keeps the answers useful:
+Four questions is a hard cap, so an account that yields more than four distinct decisions has
+to give something up. In order: group harder — near-identical findings across files almost always
+collapse into one question; then drop the curiosity questions; then merge the small stuff into
+a single "menu ménage" question whose options are the one-line fixes.
+
+If it still doesn't fit, **don't open a second prompt.** Ask about the decisions that change
+the code the most, and put the rest in the recap's "reste à faire" — saying, in one line, that
+you did and why. A second prompt is the corridor of round-trips this step was rebuilt to
+remove; an honest overflow line is not.
+
+## Step 5 — Apply what came back
+
+Nothing in the working tree has moved until now — that's deliberate, and it's what makes the
+account true of the code as the user left it, rather than of a tree half-rewritten while they
+were reading about it.
+
+Everything comes back at once, across several files. Run it in the order that keeps the answers
+useful:
 
 1. **Questions first**, all of them. An answer can change whether a selected fix is still
    wanted, or how to write it — applying first and learning the constraint after means doing
    it twice.
-2. **Then the fixes**, in file order, one confirmation line each. The user ticked them; they
-   don't need to be sold on them again.
+2. **Then the fixes**, in file order. The user ticked them; they don't need to be sold on them
+   again, and they don't need a running commentary either — Step 6 lists what changed, so
+   apply them quietly and let the recap do the reporting.
 3. **Then the movement** — navigation, skip, or the recap — always last, whatever order the
    options appeared in.
 
 | They tick / say | Do |
 |---|---|
-| nothing on a file | nothing on that file, no acknowledgement line |
+| nothing on a question | nothing on the files it covered, no acknowledgement line |
 | a fix option | apply it, confirm in one line |
 | note au récap | add it to the recap's "reste à faire", don't touch the code |
-| an answer to a question | treat it as settled, and settle it before running any fix on that file |
+| an answer to a question | treat it as settled, and settle it before running any fix it bears on |
 | nothing on a question you asked | it stays unanswered — carry it to the recap's "reste à faire" rather than filling the blank yourself |
 | navigation | go there once the whole submission is processed |
-| "reviens au 2" / "montre-moi X" | jump there, keep the counter honest |
+| "montre-moi X" / "le diff de X" | show it — the hunks, or the file whole — then come back to finish applying |
 | "arrête" | go straight to the recap for what was covered |
 
-Fixes get applied to the working tree and left uncommitted while the review runs. Committing
-mid-review would interleave review noise with the branch's real history, and the user hasn't
-yet seen the whole picture. Step 6 is where they get placed. If a fix touches a file later in
-the plan, say so when you reach it rather than silently showing the modified version.
+Fixes get applied to the working tree and left **uncommitted**. Committing here would
+interleave review noise with the branch's real history; Step 7 is where they get placed.
 
-## Step 5 — Recap
+## Step 6 — Recap
 
 At the end, keep it short — the user just read everything:
 
@@ -348,8 +426,9 @@ At the end, keep it short — the user just read everything:
 ## Récap
 12 fichiers relus, 2 sautés (migrations générées).
 
-Corrigé pendant la relecture
+Corrigé
 - `payment.ts:88` — retry limité aux 5xx
+- `webhook.ts:41` — idem
 
 Reste à faire
 - [ ] couvrir le cas carte expirée dans `payment.test.ts`
@@ -357,11 +436,11 @@ Reste à faire
 ```
 
 If fixes were applied, they're still uncommitted at this point — end the recap by saying so
-and go to Step 6. If nothing was fixed, the review is over here.
+and go to Step 7. If nothing was fixed, the review is over here.
 
-## Step 6 — Offer to file the fixes into the history
+## Step 7 — Offer to file the fixes into the history
 
-Only when fixes were actually applied. A review that changed nothing ends at Step 5.
+Only when fixes were actually applied. A review that changed nothing ends at Step 6.
 
 The fixes are sitting uncommitted, and each one belongs to a commit that already exists on
 this branch — the retry fix belongs with the commit that wrote the retry. Dropping them all
@@ -475,9 +554,18 @@ ref only when they say they're satisfied.
 
 ## Rules
 
-- **Read-only git through Steps 1 to 5.** No `checkout`, `switch`, `reset`, `rebase`,
-  `stash`, or `commit` while reading — the user is working on this branch. Step 6 is the sole
+- **Read-only git through Steps 1 to 6.** No `checkout`, `switch`, `reset`, `rebase`,
+  `stash`, or `commit` while reading — the user is working on this branch. Step 7 is the sole
   exception and requires an explicit yes.
+- **One prompt for the whole account.** Steps 1 and 7 may ask their own questions — the scope
+  when the tree is dirty, the placement of each fix — but between the first group and the last
+  there is exactly one `AskUserQuestion`. Every extra prompt is a round-trip the user did not
+  ask for.
+- **The account replaces the diff; it never quotes it wholesale.** Read every line, print
+  almost none — five lines at most, inside the remark they serve. Any diff the user asks for,
+  they get in full.
+- **Read before you summarise.** Every file's diff, the file around it, and the commit
+  messages. A summary written from the log alone is the one output worse than a wall of hunks.
 - Use the diff spec settled in Step 1 for every command, from the `--stat` to the last file.
   Three dots when the review is commits-only; a bare merge-base commit when the working tree
   is included, because `...` can't see uncommitted work.

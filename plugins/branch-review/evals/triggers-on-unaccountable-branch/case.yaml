@@ -1,0 +1,24 @@
+schema_version: "1.0"
+name: triggers-on-unaccountable-branch
+description: >
+  The situation the skill was built for: code produced fast with an assistant, working, and no
+  longer accounted for by the person about to push it. No review vocabulary, no git vocabulary,
+  and none of the phrases the description quotes — only the predicament.
+tags: [trigger, origin]
+
+execution:
+  prompt: >
+    On a monté ce module cet après-midi à deux, Claude au clavier. Ça tourne, mais je serais
+    incapable de dire ce qu'il y a dedans, et je pousse dans une heure.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    tool: Skill
+    input_match: branch-review
+    min: 1
+    arm: with-only
