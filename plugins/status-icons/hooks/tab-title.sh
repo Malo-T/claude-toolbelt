@@ -11,6 +11,13 @@
 # While it works, by contrast, Claude rewrites every 960 ms: no hook can hold a
 # "working" marker there. There is nothing to attempt on that side.
 #
+# The icon goes up immediately and, on the end-of-turn events, again after a
+# short wait. The wait used to come first, alone, to be sure of landing after
+# Claude's own write — but it cost 440 ms of measured delay on every turn for a
+# race that may not even happen. Writing twice is never worse: the first write
+# wins outright when Claude has already finished with the title, and the second
+# is exactly the old behaviour when it has not.
+#
 # Every failure is silent: on a terminal we cannot reach, or if the internal
 # state read here changes shape, the script does nothing and Claude keeps its
 # own icons.
@@ -33,48 +40,52 @@ session_file=$(jq -r --arg id "$session_id" \
   'select(.sessionId == $id) | input_filename' \
   "$sessions_dir"/*.json 2>/dev/null | head -n1)
 
-# Let Claude finish writing its own title for this state change, and the session
-# file catch up, before reading and overwriting. StopFailure waits longer than
-# Stop so that it wins if both happen to fire.
-case $event in
-  Stop | Notification) sleep 0.4 ;;
-  StopFailure) sleep 0.9 ;;
-esac
-
 pid=""
 title=""
 waiting_for=""
-if [[ -n ${session_file:-} ]]; then
+read_session() {
+  [[ -n ${session_file:-} ]] || return 0
   {
     read -r pid
     read -r title
     read -r waiting_for
   } < <(jq -r '.pid // "", .name // "", .waitingFor // ""' "$session_file" 2>/dev/null)
-fi
+}
+read_session
 
-case $event in
-  Stop) prefix="✅ " ;;
-  StopFailure) prefix="❌ " ;;
-  # The tab becomes a shell again: no icon, no topic name, just the directory.
-  SessionEnd)
-    prefix=""
-    title=""
-    ;;
-  Notification)
-    case $waiting_for in
-      # No waitingFor: nothing is blocked, this is the idle reminder. Leave the
-      # end-of-turn marker in place.
-      "") exit 0 ;;
-      "permission prompt") prefix="🔐 " ;;
-      "input needed") prefix="❓ " ;;
-      "sandbox request") prefix="🧱 " ;;
-      "worker request") prefix="🤖 " ;;
-      "dialog open") prefix="💤 " ;;
-      *) prefix="❓ " ;;
-    esac
-    ;;
-  *) exit 0 ;;
-esac
+# Derived from waiting_for, so it has to be redone whenever the session file is
+# re-read: between the two passes below the user may have answered, and the icon
+# that was right 400 ms ago would then be written over the one that is right now.
+# Returning non-zero means "nothing to write for this state".
+prefix=""
+derive_prefix() {
+  case $event in
+    Stop) prefix="✅ " ;;
+    StopFailure) prefix="❌ " ;;
+    # The tab becomes a shell again: no icon, no topic name, just the directory.
+    SessionEnd)
+      prefix=""
+      title=""
+      ;;
+    Notification)
+      case $waiting_for in
+        # No waitingFor: nothing is blocked, this is the idle reminder. Leave the
+        # end-of-turn marker in place.
+        "") return 1 ;;
+        "permission prompt") prefix="🔐 " ;;
+        "input needed") prefix="❓ " ;;
+        "sandbox request") prefix="🧱 " ;;
+        "worker request") prefix="🤖 " ;;
+        "dialog open") prefix="💤 " ;;
+        *) prefix="❓ " ;;
+      esac
+      ;;
+    *) return 1 ;;
+  esac
+  return 0
+}
+
+derive_prefix || exit 0
 
 # The hook has no controlling terminal of its own, so aim at Claude's stdout.
 # /proc on Linux, lsof elsewhere — macOS has no /proc.
@@ -89,12 +100,30 @@ resolve_tty() {
   esac
 }
 
-# At session end the file may already be gone; the hook's parent process is then
-# the only remaining path to the terminal.
-tty_path=$(resolve_tty "$pid") || tty_path=$(resolve_tty "$PPID") || exit 0
+write_title() {
+  local tty_path shown=$title
+  # At session end the file may already be gone; the hook's parent process is
+  # then the only remaining path to the terminal.
+  tty_path=$(resolve_tty "$pid") || tty_path=$(resolve_tty "$PPID") || return 0
+  [[ -n $shown ]] || shown=$(basename "$cwd")
+  [[ -n $shown ]] || shown="Claude Code"
+  shown=${shown//[[:cntrl:]]/}
+  printf '\033]0;%s%s\007' "$prefix" "$shown" >"$tty_path" 2>/dev/null || true
+}
 
-[[ -n $title ]] || title=$(basename "$cwd")
-[[ -n $title ]] || title="Claude Code"
-title=${title//[[:cntrl:]]/}
+write_title
 
-printf '\033]0;%s%s\007' "$prefix" "$title" >"$tty_path" 2>/dev/null || true
+# Second pass, wherever Claude may still write its own title afterwards — the
+# race the single delayed write used to avoid by simply arriving last.
+# StopFailure waits longer than Stop so that it wins if both happen to fire.
+case $event in
+  Stop | Notification) sleep 0.4 ;;
+  StopFailure) sleep 0.9 ;;
+  *) exit 0 ;;
+esac
+read_session
+# Re-derived, not reused: a prompt answered during the wait clears waitingFor,
+# and the second pass then has nothing to say rather than an obsolete icon to
+# reassert.
+derive_prefix || exit 0
+write_title
