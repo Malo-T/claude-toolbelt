@@ -231,9 +231,10 @@ skill — the user is reading.
 
 ## Step 4 — Close the batch with one question set
 
-Close each batch with a single `AskUserQuestion` carrying **one question per file**. The user
-walks the questions with the arrow keys, ticks what they want on each, and submits once. That
-shape is what makes the review feel like a form to fill rather than a corridor of prompts.
+Close each batch with a single `AskUserQuestion` carrying **one question per file** — two for a
+file that also raises something you want answered. The user walks the questions with the arrow
+keys, ticks what they want on each, and submits once. That shape is what makes the review feel
+like a form to fill rather than a corridor of prompts.
 
 The options are where you propose what to *do* about what was just read. A step that ends in
 a bare question mark puts the burden back on the user to formulate; one that ends in "Corrige
@@ -261,9 +262,7 @@ Per question:
      "Corrige : limiter le retry aux 5xx".
   2. **Noter au récap sans corriger** — a real third path between fixing now and dropping it,
      and the one that usually fits a finding the user needs to think about.
-  3. **A design question you'd genuinely like answered** — "Le chemin en dur est voulu ?" A
-     guided review is also your chance to understand intent you can't read off the diff.
-  4. **Navigation** — "Revenir sur `settings.json`", "Sauter au 7", "Terminer maintenant".
+  3. **Navigation** — "Revenir sur `settings.json`", "Sauter au 7", "Terminer maintenant".
 
 **A file with nothing to decide gets no question.** Say "Rien à signaler" in the presentation
 and leave it out of the question set — that's the whole point of dropping the no-op option.
@@ -281,6 +280,34 @@ rather than picking.
 
 Two well-aimed options beat four padded ones. The free-text entry is always there, so don't
 try to enumerate every possibility.
+
+### Asking something you actually want answered
+
+A guided review is also your chance to understand intent you can't read off the diff — why the
+path is hard-coded, whether the old branch still has callers. But **a tick has to say
+everything its option claims**, and an open question smuggled in as an option breaks that: the
+user checks "Le chemin en dur est voulu ?", and the answer is still missing. They've said "yes,
+let's talk about it" and nothing more. Leaving it unchecked is no better — indistinguishable
+from having no opinion.
+
+So a question you want answered never travels as an option. It gets **its own question** in the
+set, and the options are the *candidate answers*:
+
+- `question` — *`config.ts:12` — le chemin en dur vers `/var/data`, c'est voulu ?*
+- `header` — the file counter as usual, with a marker: `3/9 · ?`
+- options — *Oui, c'est le point de montage en prod* · *Non, oubli — le passer en variable
+  d'environnement*
+
+Two plausible answers you'd bet on beat a rhetorical question every time, and the entry the
+interface adds under them takes anything you didn't anticipate — that's where a sentence goes,
+so don't spend an option restating that it exists. If it turns out the interface only accepts
+free text on a question with no box ticked, say so when you ask, and keep the candidate answers
+anyway.
+
+A file that raises a real question therefore takes two slots in the set — its actions, and its
+question. Four questions is the hard cap, so that file's batch holds at most three files. If
+the question is worth asking it's worth the slot; if it doesn't survive that trade, it wasn't a
+question, it was curiosity.
 
 When a choice merges or skips steps, the announced total stops being true. Say the new one
 out loud once — "on passe de 9 à 7 étapes" — and renumber from there. A counter whose
@@ -302,7 +329,8 @@ the order that keeps the answers useful:
 | nothing on a file | nothing on that file, no acknowledgement line |
 | a fix option | apply it, confirm in one line |
 | note au récap | add it to the recap's "reste à faire", don't touch the code |
-| a question option | answer it before running any fix on that file |
+| an answer to a question | treat it as settled, and settle it before running any fix on that file |
+| nothing on a question you asked | it stays unanswered — carry it to the recap's "reste à faire" rather than filling the blank yourself |
 | navigation | go there once the whole submission is processed |
 | "reviens au 2" / "montre-moi X" | jump there, keep the counter honest |
 | "arrête" | go straight to the recap for what was covered |
