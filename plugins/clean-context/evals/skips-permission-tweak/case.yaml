@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: skips-permission-tweak
+description: >
+  The boundary with update-config. A one-off permission change touches settings.json too, which is
+  exactly why this skill must stay out of it.
+tags: [trigger, boundary]
+
+execution:
+  prompt: >
+    Autorise les commandes npm sans me demander la permission à chaque fois.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-stays-quiet
+    tool: Skill
+    input_match: ignore-setup
+    max: 0
+    arm: with-only
