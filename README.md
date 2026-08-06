@@ -124,6 +124,18 @@ claude plugin validate . --strict
 for p in plugins/*/; do claude plugin validate "$p/.claude-plugin/plugin.json" --strict; done
 ```
 
+The two `status-*` plugins each ship their own copy of `hooks/watch.sh`, byte for byte the same
+program under two names. That is deliberate — they install independently and must share nothing — but
+it means a fix written in one copy and forgotten in the other passes every other check silently. One
+script says so:
+
+```sh
+./scripts/check-watcher-parity.sh
+```
+
+It drops the full-line comments, whose prose is meant to differ, normalises the plugin name, the
+environment prefix and the script each watcher calls, and then demands strict equality.
+
 ## Evals
 
 The skill plugins carry trigger cases under `plugins/<name>/evals/`, one directory per case. The
@@ -165,6 +177,7 @@ plugins/
 ├── clean-context/                 # skill + references + evals
 ├── status-icons/                  # hooks
 └── status-sounds/                 # hooks
+scripts/                           # pre-push checks that no CLI covers
 LICENSE                            # MIT, covers every plugin
 ```
 
