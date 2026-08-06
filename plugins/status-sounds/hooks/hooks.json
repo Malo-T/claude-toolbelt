@@ -1,6 +1,27 @@
 {
   "description": "Plays a short sound when Claude has finished, has failed, or wants something from you.",
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/watch.sh\"",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/watch.sh\" --stop"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
