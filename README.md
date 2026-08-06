@@ -1,9 +1,12 @@
 # claude-toolbelt
 
-Four Claude Code plugins that share an author and nothing else. They were three separate
-repositories, each carrying its own marketplace, which meant three `marketplace add` commands and
-three places to keep the same boilerplate in step. One marketplace publishes all four now, and each
-stays independent: install the one you want, ignore the rest.
+Claude Code plugins, each taking on a point of friction in the day-to-day loop: knowing where the
+session stands without watching it, keeping the noise out of what Claude reads, going back over
+your own work before anyone else does. What they have in common is the intent, not a domain — they
+are the things that were missing often enough to be worth writing.
+
+One marketplace publishes them all, so adding a plugin is one command rather than one more
+marketplace. Each stays independent: install the one you want, ignore the rest.
 
 | Plugin | What it does |
 |---|---|
@@ -23,8 +26,8 @@ claude plugin install branch-review@claude-toolbelt
 ```
 
 Two commands are needed: `claude plugin install` only resolves names against marketplaces that are
-already configured, never a git URL. Once the marketplace is added, install as many as you want —
-`clean-context@claude-toolbelt`, `status-icons@claude-toolbelt`, `status-sounds@claude-toolbelt`.
+already configured, never a git URL. Once the marketplace is added, install as many as you want:
+any plugin from the table above, suffixed with `@claude-toolbelt`.
 
 `marketplace add` also takes a local path, which is how to install a clone without going through
 GitHub.
@@ -45,7 +48,7 @@ Installed plugins live in a read-only cache under `~/.claude/plugins/cache/`, so
 pointless — and because the marketplace is fetched from GitHub, an edit to this clone has no effect
 on the installed copy until it is pushed. Two ways round it while developing.
 
-Point the marketplace at the working copy, which covers all four at once:
+Point the marketplace at the working copy, which covers every plugin at once:
 
 ```sh
 claude plugin marketplace add ~/workspace/claude/claude-toolbelt
@@ -86,13 +89,13 @@ dirty tree.
 ## Layout
 
 ```
-.claude-plugin/marketplace.json    # the one marketplace, four entries
+.claude-plugin/marketplace.json    # the one marketplace, one entry per plugin
 plugins/
 ├── branch-review/                 # skill
 ├── clean-context/                 # skill + references + evals
 ├── status-icons/                  # hooks
 └── status-sounds/                 # hooks
-LICENSE                            # MIT, covers all four
+LICENSE                            # MIT, covers every plugin
 ```
 
 ## License
