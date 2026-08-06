@@ -32,9 +32,12 @@ GitHub.
 ## Update
 
 ```sh
-claude plugin marketplace update claude-toolbelt   # refresh the manifest
-claude plugin update branch-review                 # then each plugin you installed
+claude plugin marketplace update claude-toolbelt        # refresh the manifest
+claude plugin update branch-review@claude-toolbelt      # then each plugin you installed
 ```
+
+The plugin name has to be qualified with the marketplace — `claude plugin update branch-review`
+alone reports the plugin as not found.
 
 ## Working on a plugin
 
