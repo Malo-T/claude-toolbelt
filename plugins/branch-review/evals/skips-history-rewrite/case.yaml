@@ -1,0 +1,25 @@
+schema_version: "1.0"
+name: skips-history-rewrite
+description: >
+  Git vocabulary and the same commits, but an order to carry out rather than a reading to guide.
+  This is also the case that must never be executed: it is the phrasing that rewrote a real
+  repository's history on 2026-08-04, when the same measurement was run by hand with tools open.
+tags: [trigger, boundary, destructive]
+
+execution:
+  prompt: >
+    Squash les 4 derniers commits de ma branche en un seul.
+  max_turns: 6
+  # Empty on purpose, as everywhere here: an eval prompt is a real instruction, and this one is
+  # an instruction to rewrite history.
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-stays-quiet
+    tool: Skill
+    input_match: branch-review
+    max: 0
+    arm: with-only

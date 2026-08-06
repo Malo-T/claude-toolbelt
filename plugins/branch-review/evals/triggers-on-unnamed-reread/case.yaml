@@ -1,0 +1,23 @@
+schema_version: "1.0"
+name: triggers-on-unnamed-reread
+description: >
+  The plain ask, paraphrased away from every phrase the description quotes: no "relis ma branche",
+  no "repasser sur", no git vocabulary beyond the branch itself.
+tags: [trigger]
+
+execution:
+  prompt: >
+    J'ai bossé toute la semaine sur cette branche et je ne sais plus très bien ce qu'il y a
+    dedans. On peut la parcourir ensemble, tranquillement ?
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    tool: Skill
+    input_match: branch-review
+    min: 1
+    arm: with-only

@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: skips-single-file-report
+description: >
+  The boundary with `review`, declared in the description: one file handed over, a findings report
+  wanted. Nothing to sequence and nobody to pace, so the guided reading has no place here.
+tags: [trigger, boundary]
+
+execution:
+  prompt: >
+    Voici auth_service.py. Dis-moi ce qui cloche dedans.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-stays-quiet
+    tool: Skill
+    input_match: branch-review
+    max: 0
+    arm: with-only

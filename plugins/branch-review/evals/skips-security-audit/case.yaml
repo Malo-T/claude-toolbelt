@@ -1,0 +1,23 @@
+schema_version: "1.0"
+name: skips-security-audit
+description: >
+  The hardest near-miss: same scope, same branch, same "mes changements" — only the intent differs.
+  The description hands this one to `security-review`, and the overlap is where it could slip.
+tags: [trigger, boundary]
+
+execution:
+  prompt: >
+    Fais un audit de sécurité des changements de ma branche, je veux surtout savoir si j'ai
+    laissé passer une faille.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-stays-quiet
+    tool: Skill
+    input_match: branch-review
+    max: 0
+    arm: with-only

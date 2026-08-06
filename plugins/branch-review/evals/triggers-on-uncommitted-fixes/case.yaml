@@ -1,0 +1,23 @@
+schema_version: "1.0"
+name: triggers-on-uncommitted-fixes
+description: >
+  The second half of the skill — reading, then filing the fixes into the commits they belong to.
+  That clause of the description carries no quoted phrase, so nothing but the wording holds it up.
+tags: [trigger, fixup]
+
+execution:
+  prompt: >
+    En plus de mes trois commits j'ai des correctifs pas encore commités. Je voudrais tout
+    relire, puis ranger chaque correctif dans le commit auquel il appartient.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    tool: Skill
+    input_match: branch-review
+    min: 1
+    arm: with-only

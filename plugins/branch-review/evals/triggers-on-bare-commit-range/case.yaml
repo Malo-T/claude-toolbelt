@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: triggers-on-bare-commit-range
+description: >
+  A range named instead of a branch, in English. The description covers it in one clause and the
+  temptation is to answer with a bare git diff, which is the failure mode the skill exists against.
+tags: [trigger, scope]
+
+execution:
+  prompt: >
+    Take me through HEAD~4..HEAD one commit at a time. I want to read it myself before I push.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    tool: Skill
+    input_match: branch-review
+    min: 1
+    arm: with-only
