@@ -46,9 +46,58 @@ alone reports the plugin as not found.
 
 Installed plugins live in a read-only cache under `~/.claude/plugins/cache/`, so editing there is
 pointless — and because the marketplace is fetched from GitHub, an edit to this clone has no effect
-on the installed copy until it is pushed. Two ways round it while developing.
+on the installed copy until it is pushed.
 
-Point the marketplace at the working copy, which covers every plugin at once:
+`--plugin-dir` is the way round it. It loads a plugin from the working copy for that session only,
+and takes precedence over the installed plugin of the same name:
+
+```sh
+claude --plugin-dir "$PWD/plugins/branch-review"
+```
+
+The flag is repeatable, and it has to come before any subcommand — `claude plugin list
+--plugin-dir …` is rejected outright, while `claude --plugin-dir … plugin list` is accepted. It
+writes nothing: the cache, `installed_plugins.json` and `known_marketplaces.json` are all left
+alone, and the installed copy is back the moment the flag is dropped. So there is no need to
+uninstall anything first, and nothing to undo afterwards.
+
+`/reload-plugins` picks up later edits without restarting the session. That covers hooks too:
+`${CLAUDE_PLUGIN_ROOT}` resolves to the working copy, so `plugins/status-*/hooks/*.sh` are live as
+well.
+
+Note the override replaces the whole plugin rather than merging with it — a skill the installed copy
+provides and the working copy has dropped is simply absent for that session.
+
+Typing four flags gets old, so key them on the directory instead (zsh):
+
+```zsh
+claude() {
+	local root=$HOME/workspace/claude/claude-toolbelt
+	if [[ $PWD/ == $root/* ]]; then
+		setopt localoptions null_glob
+		local -a flags
+		local manifest
+		for manifest in $root/plugins/*/.claude-plugin/plugin.json; do
+			flags+=(--plugin-dir "${manifest:h:h}")
+		done
+		command claude "${flags[@]}" "$@"
+	else
+		command claude "$@"
+	fi
+}
+```
+
+Globbing the manifest rather than the directory means a new plugin is picked up without touching the
+function, and a directory without a manifest is skipped instead of failing the launch. `null_glob` as
+a scoped option, rather than an `(N)` qualifier, is what makes that skip hold everywhere: a shell
+started with `bare_glob_qual` off — Claude Code's own hook and Bash-tool shells, among others — reads
+`(N)` as a literal and aborts the glob, so a nested `claude` would fail outright. Outside the
+repository the command is untouched, so the published versions stay in use everywhere else — and
+remain the fallback when the working copy is mid-edit.
+
+Two alternatives, both weaker. Pointing the marketplace at the working copy still installs a *copy*
+into the cache, so an edit only lands after an explicit `claude plugin update` — useful for
+rehearsing a release, not for iterating:
 
 ```sh
 claude plugin marketplace add ~/workspace/claude/claude-toolbelt
@@ -63,7 +112,8 @@ claude plugin uninstall branch-review@claude-toolbelt
 ln -s "$PWD/plugins/branch-review" ~/.claude/skills/branch-review
 ```
 
-Do not keep both the installed plugin and the symlink: same plugin name, and the two collide.
+Unlike `--plugin-dir`, this one does collide: uninstall the plugin first, or the same name is
+claimed twice.
 
 Before pushing, validate the marketplace and each plugin manifest. Both are needed — given a
 directory, the command stops at `marketplace.json` and never opens the plugin manifests, so a broken
