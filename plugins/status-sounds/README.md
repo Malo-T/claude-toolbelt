@@ -17,9 +17,8 @@ are.
 Sixty seconds after a turn ends, Claude Code sends itself one more notification (`idle_prompt`,
 "Claude is waiting for your input") for anyone who missed the end-of-turn sound. By ear that is the
 same ping as a real question, and it arrives when nothing at all is blocked, so this plugin stays
-quiet on it. `STATUS_SOUNDS_IDLE_REMINDER` below turns the second chance back on, and
-`STATUS_SOUNDS_IDLE_SOUND` gives it a sound of its own so that turning it on does not put back the
-confusion it was silenced for. `status-icons` ignores the reminder outright.
+quiet on it — unless you name it a sound of its own, [below](#the-idle-reminder). `status-icons`
+ignores the reminder outright.
 
 The two are separate plugins on purpose — sound is intrusive where an icon is not — so installing
 one does not oblige you to take the other.
@@ -42,17 +41,16 @@ the dial to turn if it makes the plugin chattier than you want.
 The end-of-turn sound has never been late: that event fires the moment Claude goes idle, and the
 script reaches the audio player 8 ms later.
 
-### Three dials
+### Two dials
 
-All three are read from the environment, so they belong under `"env"` in `settings.json` and need no
-edit to the plugin:
+Both are read from the environment, so they belong under `"env"` in `settings.json` and need no edit
+to the plugin:
 
 ```jsonc
 {
   "env": {
-    "STATUS_SOUNDS_ALERT_DELAY": "1",       // seconds blocked before the sound — default 0
-    "STATUS_SOUNDS_POLL_INTERVAL": "0.25",  // how often to look — default 0.25
-    "STATUS_SOUNDS_IDLE_REMINDER": "true"   // ping again 60 s after a turn — default off
+    "STATUS_SOUNDS_ALERT_DELAY": "1",      // seconds blocked before the sound — default 0
+    "STATUS_SOUNDS_POLL_INTERVAL": "0.25"  // how often to look — default 0.25
   }
 }
 ```
@@ -60,12 +58,10 @@ edit to the plugin:
 `ALERT_DELAY` is the one worth touching: it is Claude Code's six-second debounce, back under your
 control. At `1`, a prompt you dismiss straight away stays silent while a real interruption still
 reaches you five seconds sooner than before. `POLL_INTERVAL` caps how late the sound can be and is
-mostly there for the very patient; raising it saves nothing measurable. `IDLE_REMINDER` takes `1`,
-`true`, `yes` or `on`, and anything else leaves the reminder silent — unless you have named a sound
-for it, which is covered under [changing the sound set](#the-idle-reminder).
+mostly there for the very patient; raising it saves nothing measurable.
 
-A delay or an interval that is not a positive number falls back to the default rather than stopping
-the watcher. Both go through `LC_ALL=C` — under a French locale `awk` prints `0,25`, and bash reads
+A value that is not a positive number falls back to the default rather than stopping the watcher.
+Both are sanitised through `LC_ALL=C` — under a French locale `awk` prints `0,25`, and bash reads
 `read -t 0,25` as *twenty-five seconds*, which would silently make the poll a hundred times slower
 than the delay it exists to remove.
 
@@ -146,10 +142,8 @@ Give one an empty string and that state goes quiet while the rest keep their sou
 }
 ```
 
-Leaving a variable out is not the same as emptying it: out means the default, empty means off. `off`,
-`none`, `no`, `0`, `false` and `null` all read as off too — you set these as JSON strings, and a bare
-`null` in `settings.json` reaches the hook as the four letters `null`, which would otherwise be taken
-for a path.
+Leaving a variable out is not the same as emptying it: out means the default, empty means off. `""`
+is the one spelling of off, in settings.json as everywhere else in this README.
 
 Each takes a whole path rather than an entry in `STATUS_SOUNDS_THEME`, so a single replacement needs
 no theme directory and the same setting works on macOS, where the theme variable is ignored. An
@@ -158,8 +152,7 @@ unreadable path is silent, like every other missing sound here — which means a
 
 ### The idle reminder
 
-`STATUS_SOUNDS_IDLE_REMINDER` alone plays the alert ping again a minute after your turn ends, which
-sounds exactly like the question it is not. `STATUS_SOUNDS_IDLE_SOUND` is what tells the two apart:
+Unlike the other three, it has no sound of its own to start with — silent until you name one:
 
 ```jsonc
 {
@@ -170,8 +163,7 @@ sounds exactly like the question it is not. `STATUS_SOUNDS_IDLE_SOUND` is what t
 }
 ```
 
-Setting it turns the reminder on by itself, so `IDLE_REMINDER` is only worth setting to hear the
-reminder as the ordinary alert. That fallback is literal: silence the alert with
-`STATUS_SOUNDS_ATTENTION_SOUND` and a reminder with no sound of its own has nothing left to play.
+Setting `STATUS_SOUNDS_IDLE_SOUND` is what turns the reminder on: there is no separate switch, and
+nothing to turn back off beyond emptying that one variable, same as any other state.
 
 Part of [claude-toolbelt](../../README.md), where install, development and licence live.

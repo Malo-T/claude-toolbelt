@@ -39,25 +39,12 @@ esac
 #              messageIdleNotifThresholdMs)    messageIdleNotifThresholdMs: 60000
 #
 # Heard rather than read, that is indistinguishable from a real question, and it
-# arrives when nothing at all is waiting on you. Off by default, therefore. The
-# watcher's own payload carries no notification_type, so it never matches here.
-#
-#   STATUS_SOUNDS_IDLE_REMINDER  play the 60 s reminder too, off by default.
-#   STATUS_SOUNDS_IDLE_SOUND     path to play for it instead of the alert.
-#
-# Spelt-out truthy values are accepted alongside 1 because the knob is set as a
-# string under "env" in settings.json, where "true" is the obvious thing to
-# write and would otherwise be a silent no-op.
-if [[ $notification_type == idle_prompt ]]; then
-  case ${STATUS_SOUNDS_IDLE_REMINDER:-0} in
-    1 | true | yes | on) ;;
-    # Naming a sound for the reminder is asking to hear it, so IDLE_SOUND turns
-    # it on by itself. Demanding both would mean setting a sound, hearing
-    # nothing, and having no way to tell that from a broken path.
-    *) [[ -n ${STATUS_SOUNDS_IDLE_SOUND:-} ]] || exit 0 ;;
-  esac
-  key=idle
-fi
+# arrives when nothing at all is waiting on you. It gets a key of its own so it
+# can have a sound of its own — STATUS_SOUNDS_IDLE_SOUND, resolved with the
+# other three below — and, unlike them, no built-in default: name a sound or it
+# stays silent. The watcher's own payload carries no notification_type, so it
+# never takes this branch.
+[[ $notification_type == idle_prompt ]] && key=idle
 
 # watch.sh sees the waiting state six seconds before the event does, and its
 # marker says it owns this episode — whether it has played already or is still
@@ -97,45 +84,33 @@ if [[ $event == Notification && -n $session_id && -z ${STATUS_SOUNDS_FROM_WATCHE
   watcher_owns_episode && exit 0
 fi
 
-# The reminder has no sound of its own to fall back on, so IDLE_REMINDER alone
-# means "as the ordinary alert" — including that alert's silence, if you turned
-# it off below. Naming a sound is what keeps it a state apart.
-if [[ $key == idle && -z ${STATUS_SOUNDS_IDLE_SOUND+x} ]]; then
-  key=attention
-fi
-
 # Each state answers to a variable of its own: a path to play instead of the
-# default, or one of the falsy spellings below to hear that state and no other.
+# default, or an empty string to hear nothing for that state alone.
 #
 #   STATUS_SOUNDS_DONE_SOUND       turn finished
 #   STATUS_SOUNDS_ERROR_SOUND      turn finished with an error
 #   STATUS_SOUNDS_ATTENTION_SOUND  waiting on you
 #   STATUS_SOUNDS_IDLE_SOUND       the 60 s reminder
 #
-# Unset and empty have to mean different things here — the default against a
-# deliberate "off" — so the test is ${VAR+x} and never ${VAR:-}. Spelt-out
-# values are accepted beside the empty string because these are set as strings
-# under "env" in settings.json, and a JSON null there arrives as "null" rather
-# than as an unset variable, which would otherwise be read as a path.
+# Unset and empty have to mean different things — the default against a
+# deliberate "off" — so the test is ${VAR+x} and never ${VAR:-}. The idle
+# reminder has no default to fall back to, so for it the two end up sounding
+# the same: silence either way.
 case $key in
   done) is_set=${STATUS_SOUNDS_DONE_SOUND+x} value=${STATUS_SOUNDS_DONE_SOUND:-} ;;
   error) is_set=${STATUS_SOUNDS_ERROR_SOUND+x} value=${STATUS_SOUNDS_ERROR_SOUND:-} ;;
   attention) is_set=${STATUS_SOUNDS_ATTENTION_SOUND+x} value=${STATUS_SOUNDS_ATTENTION_SOUND:-} ;;
   idle) is_set=${STATUS_SOUNDS_IDLE_SOUND+x} value=${STATUS_SOUNDS_IDLE_SOUND:-} ;;
-  *) is_set="" value="" ;;
 esac
 
 sound=""
 if [[ -n $is_set ]]; then
-  case $value in
-    "" | off | none | no | "0" | false | null) exit 0 ;;
-    *) sound=$value ;;
-  esac
+  [[ -n $value ]] && sound=$value || exit 0
 fi
 
 # macOS has no freedesktop sound theme, and Linux has no /System/Library.
-# Skipped outright when a path was given above: that one belongs to neither, and
-# the idle reminder has no default here to fall through to.
+# Skipped outright when a path was given above, and idle has no branch here at
+# all: naming STATUS_SOUNDS_IDLE_SOUND is the only way it ever gets a sound.
 if [[ -z $sound ]]; then
   case $(uname -s) in
     Darwin)
