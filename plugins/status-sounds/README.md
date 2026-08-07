@@ -17,8 +17,9 @@ are.
 Sixty seconds after a turn ends, Claude Code sends itself one more notification (`idle_prompt`,
 "Claude is waiting for your input") for anyone who missed the end-of-turn sound. By ear that is the
 same ping as a real question, and it arrives when nothing at all is blocked, so this plugin stays
-quiet on it. `STATUS_SOUNDS_IDLE_REMINDER` below turns the second chance back on. `status-icons`
-ignores the reminder outright.
+quiet on it. `STATUS_SOUNDS_IDLE_REMINDER` below turns the second chance back on, and
+`STATUS_SOUNDS_IDLE_SOUND` gives it a sound of its own so that turning it on does not put back the
+confusion it was silenced for. `status-icons` ignores the reminder outright.
 
 The two are separate plugins on purpose — sound is intrusive where an icon is not — so installing
 one does not oblige you to take the other.
@@ -60,7 +61,8 @@ edit to the plugin:
 control. At `1`, a prompt you dismiss straight away stays silent while a real interruption still
 reaches you five seconds sooner than before. `POLL_INTERVAL` caps how late the sound can be and is
 mostly there for the very patient; raising it saves nothing measurable. `IDLE_REMINDER` takes `1`,
-`true`, `yes` or `on`, and anything else leaves the reminder silent.
+`true`, `yes` or `on`, and anything else leaves the reminder silent — unless you have named a sound
+for it, which is covered under [changing the sound set](#the-idle-reminder).
 
 A delay or an interval that is not a positive number falls back to the default rather than stopping
 the watcher. Both go through `LC_ALL=C` — under a French locale `awk` prints `0,25`, and bash reads
@@ -120,5 +122,24 @@ theme at `/usr/share/sounds/freedesktop/stereo`. macOS uses `/System/Library/Sou
 variable.
 
 Beyond that it all sits in the `case` statements of [`hooks/play.sh`](hooks/play.sh), in plain sight.
+
+### The idle reminder
+
+`STATUS_SOUNDS_IDLE_REMINDER` alone plays the alert ping again a minute after your turn ends, which
+sounds exactly like the question it is not. Name a file and it stops:
+
+```jsonc
+{
+  "env": {
+    // On macOS, /System/Library/Sounds/Submarine.aiff
+    "STATUS_SOUNDS_IDLE_SOUND": "/usr/share/sounds/freedesktop/stereo/dialog-information.oga"
+  }
+}
+```
+
+Setting this turns the reminder on by itself, so `IDLE_REMINDER` is only needed to hear the reminder
+as the ordinary alert. The value is a whole path rather than an entry in `STATUS_SOUNDS_THEME`: one
+file needs no theme directory, and the same setting then works on macOS. An unreadable path is
+silent, like every other missing sound here.
 
 Part of [claude-toolbelt](../../README.md), where install, development and licence live.

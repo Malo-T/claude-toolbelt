@@ -42,6 +42,7 @@ esac
 # watcher's own payload carries no notification_type, so it never matches here.
 #
 #   STATUS_SOUNDS_IDLE_REMINDER  play the 60 s reminder too, off by default.
+#   STATUS_SOUNDS_IDLE_SOUND     path to play for it instead of the alert.
 #
 # Spelt-out truthy values are accepted alongside 1 because the knob is set as a
 # string under "env" in settings.json, where "true" is the obvious thing to
@@ -49,8 +50,12 @@ esac
 if [[ $notification_type == idle_prompt ]]; then
   case ${STATUS_SOUNDS_IDLE_REMINDER:-0} in
     1 | true | yes | on) ;;
-    *) exit 0 ;;
+    # Naming a sound for the reminder is asking to hear it, so IDLE_SOUND turns
+    # it on by itself. Demanding both would mean setting a sound, hearing
+    # nothing, and having no way to tell that from a broken path.
+    *) [[ -n ${STATUS_SOUNDS_IDLE_SOUND:-} ]] || exit 0 ;;
   esac
+  key=idle
 fi
 
 # watch.sh sees the waiting state six seconds before the event does, and its
@@ -91,7 +96,19 @@ if [[ $event == Notification && -n $session_id && -z ${STATUS_SOUNDS_FROM_WATCHE
   watcher_owns_episode && exit 0
 fi
 
-# macOS has no freedesktop sound theme, and Linux has no /System/Library.
+# Turning the reminder on and hearing the alert ping again puts back the very
+# confusion it was silenced for, so it can have a sound of its own: a full path,
+# not a name inside the theme, which keeps it working on macOS and costs nobody
+# a theme directory for one file. Without one it falls back to the alert, which
+# is all IDLE_REMINDER on its own ever asked for.
+if [[ $key == idle ]]; then
+  sound=${STATUS_SOUNDS_IDLE_SOUND:-}
+  [[ -n $sound ]] || key=attention
+fi
+
+# macOS has no freedesktop sound theme, and Linux has no /System/Library. The
+# idle reminder with a sound of its own reaches neither: $sound is already the
+# path its owner gave, and no branch below matches its key.
 case $(uname -s) in
   Darwin)
     case $key in
