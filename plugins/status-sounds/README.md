@@ -14,8 +14,11 @@ Three sounds, where its sibling [`status-icons`](../status-icons) tells seven st
 the one useful question is "do I need to go back?". The detail is there to read on the tab once you
 are.
 
-Unlike the icons, the sound *does* fire on the idle reminder — that is precisely where it earns its
-keep, since you are not in front of the screen.
+Sixty seconds after a turn ends, Claude Code sends itself one more notification (`idle_prompt`,
+"Claude is waiting for your input") for anyone who missed the end-of-turn sound. By ear that is the
+same ping as a real question, and it arrives when nothing at all is blocked, so this plugin stays
+quiet on it. `STATUS_SOUNDS_IDLE_REMINDER` below turns the second chance back on. `status-icons`
+ignores the reminder outright.
 
 The two are separate plugins on purpose — sound is intrusive where an icon is not — so installing
 one does not oblige you to take the other.
@@ -38,16 +41,17 @@ the dial to turn if it makes the plugin chattier than you want.
 The end-of-turn sound has never been late: that event fires the moment Claude goes idle, and the
 script reaches the audio player 8 ms later.
 
-### Two dials
+### Three dials
 
-Both are read from the environment, so they belong under `"env"` in `settings.json` and need no edit
-to the plugin:
+All three are read from the environment, so they belong under `"env"` in `settings.json` and need no
+edit to the plugin:
 
 ```jsonc
 {
   "env": {
-    "STATUS_SOUNDS_ALERT_DELAY": "1",      // seconds blocked before the sound — default 0
-    "STATUS_SOUNDS_POLL_INTERVAL": "0.25"  // how often to look — default 0.25
+    "STATUS_SOUNDS_ALERT_DELAY": "1",       // seconds blocked before the sound — default 0
+    "STATUS_SOUNDS_POLL_INTERVAL": "0.25",  // how often to look — default 0.25
+    "STATUS_SOUNDS_IDLE_REMINDER": "true"   // ping again 60 s after a turn — default off
   }
 }
 ```
@@ -55,10 +59,11 @@ to the plugin:
 `ALERT_DELAY` is the one worth touching: it is Claude Code's six-second debounce, back under your
 control. At `1`, a prompt you dismiss straight away stays silent while a real interruption still
 reaches you five seconds sooner than before. `POLL_INTERVAL` caps how late the sound can be and is
-mostly there for the very patient; raising it saves nothing measurable.
+mostly there for the very patient; raising it saves nothing measurable. `IDLE_REMINDER` takes `1`,
+`true`, `yes` or `on`, and anything else leaves the reminder silent.
 
-A value that is not a positive number falls back to the default rather than stopping the watcher.
-Both are sanitised through `LC_ALL=C` — under a French locale `awk` prints `0,25`, and bash reads
+A delay or an interval that is not a positive number falls back to the default rather than stopping
+the watcher. Both go through `LC_ALL=C` — under a French locale `awk` prints `0,25`, and bash reads
 `read -t 0,25` as *twenty-five seconds*, which would silently make the poll a hundred times slower
 than the delay it exists to remove.
 

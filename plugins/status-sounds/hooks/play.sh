@@ -18,7 +18,9 @@ payload=$(cat)
 {
   read -r event
   read -r session_id
-} < <(printf '%s' "$payload" | jq -r '.hook_event_name // "", .session_id // ""')
+  read -r notification_type
+} < <(printf '%s' "$payload" |
+  jq -r '.hook_event_name // "", .session_id // "", .notification_type // ""')
 
 case $event in
   Stop) key=done ;;
@@ -26,6 +28,30 @@ case $event in
   Notification) key=attention ;;
   *) exit 0 ;;
 esac
+
+# Not every Notification means Claude is blocked. Sixty seconds after a turn
+# ends, Claude Code sends itself one more — notification_type "idle_prompt",
+# message "Claude is waiting for your input" — as a second chance for someone
+# who missed the end-of-turn sound:
+#
+#   setTimeout(() => …notify("Claude is waiting for your input", "idle_prompt")…,
+#              messageIdleNotifThresholdMs)    messageIdleNotifThresholdMs: 60000
+#
+# Heard rather than read, that is indistinguishable from a real question, and it
+# arrives when nothing at all is waiting on you. Off by default, therefore. The
+# watcher's own payload carries no notification_type, so it never matches here.
+#
+#   STATUS_SOUNDS_IDLE_REMINDER  play the 60 s reminder too, off by default.
+#
+# Spelt-out truthy values are accepted alongside 1 because the knob is set as a
+# string under "env" in settings.json, where "true" is the obvious thing to
+# write and would otherwise be a silent no-op.
+if [[ $notification_type == idle_prompt ]]; then
+  case ${STATUS_SOUNDS_IDLE_REMINDER:-0} in
+    1 | true | yes | on) ;;
+    *) exit 0 ;;
+  esac
+fi
 
 # watch.sh sees the waiting state six seconds before the event does, and its
 # marker says it owns this episode — whether it has played already or is still
