@@ -23,6 +23,25 @@ ignores the reminder outright.
 The two are separate plugins on purpose — sound is intrusive where an icon is not — so installing
 one does not oblige you to take the other.
 
+## Configuration at a glance
+
+Seven variables, all read fresh on every hook call, so they belong under `"env"` in `settings.json`
+and take effect without touching the plugin:
+
+| Variable | Default |
+|---|---|
+| `STATUS_SOUNDS_ALERT_DELAY` | `0` seconds blocked before the alert plays |
+| `STATUS_SOUNDS_POLL_INTERVAL` | `0.25` seconds between watcher checks |
+| `STATUS_SOUNDS_THEME` | `/usr/share/sounds/freedesktop/stereo` (Linux only) |
+| `STATUS_SOUNDS_DONE_SOUND` | the theme's `complete` / `Glass.aiff` |
+| `STATUS_SOUNDS_ERROR_SOUND` | the theme's `dialog-warning` / `Basso.aiff` |
+| `STATUS_SOUNDS_ATTENTION_SOUND` | the theme's `message-new-instant` / `Ping.aiff` |
+| `STATUS_SOUNDS_IDLE_SOUND` | none, the reminder stays silent |
+
+The last four take a path to play instead of the default, or an empty string to silence that one
+state. [Timing](#timing) covers the first two, [changing the sound set](#changing-the-sound-set) the
+rest.
+
 ## Timing
 
 A sound that arrives late has already failed: you looked up at the wrong moment, or not at all.
