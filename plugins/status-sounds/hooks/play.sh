@@ -7,7 +7,8 @@
 # read on the tab once you are.
 #
 # Every failure is silent — no audio player, no sound file, unknown system: the
-# script exits without a word.
+# script exits without a word. Each state can also be silenced on purpose,
+# through the STATUS_SOUNDS_*_SOUND variables resolved further down.
 #
 # Written for bash 3.2, the version macOS still ships: no associative arrays and
 # no case-conversion expansions here.
@@ -96,36 +97,64 @@ if [[ $event == Notification && -n $session_id && -z ${STATUS_SOUNDS_FROM_WATCHE
   watcher_owns_episode && exit 0
 fi
 
-# Turning the reminder on and hearing the alert ping again puts back the very
-# confusion it was silenced for, so it can have a sound of its own: a full path,
-# not a name inside the theme, which keeps it working on macOS and costs nobody
-# a theme directory for one file. Without one it falls back to the alert, which
-# is all IDLE_REMINDER on its own ever asked for.
-if [[ $key == idle ]]; then
-  sound=${STATUS_SOUNDS_IDLE_SOUND:-}
-  [[ -n $sound ]] || key=attention
+# The reminder has no sound of its own to fall back on, so IDLE_REMINDER alone
+# means "as the ordinary alert" — including that alert's silence, if you turned
+# it off below. Naming a sound is what keeps it a state apart.
+if [[ $key == idle && -z ${STATUS_SOUNDS_IDLE_SOUND+x} ]]; then
+  key=attention
 fi
 
-# macOS has no freedesktop sound theme, and Linux has no /System/Library. The
-# idle reminder with a sound of its own reaches neither: $sound is already the
-# path its owner gave, and no branch below matches its key.
-case $(uname -s) in
-  Darwin)
-    case $key in
-      done) sound=/System/Library/Sounds/Glass.aiff ;;
-      attention) sound=/System/Library/Sounds/Ping.aiff ;;
-      error) sound=/System/Library/Sounds/Basso.aiff ;;
-    esac
-    ;;
-  *)
-    theme=${STATUS_SOUNDS_THEME:-/usr/share/sounds/freedesktop/stereo}
-    case $key in
-      done) sound="$theme/complete.oga" ;;
-      attention) sound="$theme/message-new-instant.oga" ;;
-      error) sound="$theme/dialog-warning.oga" ;;
-    esac
-    ;;
+# Each state answers to a variable of its own: a path to play instead of the
+# default, or one of the falsy spellings below to hear that state and no other.
+#
+#   STATUS_SOUNDS_DONE_SOUND       turn finished
+#   STATUS_SOUNDS_ERROR_SOUND      turn finished with an error
+#   STATUS_SOUNDS_ATTENTION_SOUND  waiting on you
+#   STATUS_SOUNDS_IDLE_SOUND       the 60 s reminder
+#
+# Unset and empty have to mean different things here — the default against a
+# deliberate "off" — so the test is ${VAR+x} and never ${VAR:-}. Spelt-out
+# values are accepted beside the empty string because these are set as strings
+# under "env" in settings.json, and a JSON null there arrives as "null" rather
+# than as an unset variable, which would otherwise be read as a path.
+case $key in
+  done) is_set=${STATUS_SOUNDS_DONE_SOUND+x} value=${STATUS_SOUNDS_DONE_SOUND:-} ;;
+  error) is_set=${STATUS_SOUNDS_ERROR_SOUND+x} value=${STATUS_SOUNDS_ERROR_SOUND:-} ;;
+  attention) is_set=${STATUS_SOUNDS_ATTENTION_SOUND+x} value=${STATUS_SOUNDS_ATTENTION_SOUND:-} ;;
+  idle) is_set=${STATUS_SOUNDS_IDLE_SOUND+x} value=${STATUS_SOUNDS_IDLE_SOUND:-} ;;
+  *) is_set="" value="" ;;
 esac
+
+sound=""
+if [[ -n $is_set ]]; then
+  case $value in
+    "" | off | none | no | "0" | false | null) exit 0 ;;
+    *) sound=$value ;;
+  esac
+fi
+
+# macOS has no freedesktop sound theme, and Linux has no /System/Library.
+# Skipped outright when a path was given above: that one belongs to neither, and
+# the idle reminder has no default here to fall through to.
+if [[ -z $sound ]]; then
+  case $(uname -s) in
+    Darwin)
+      case $key in
+        done) sound=/System/Library/Sounds/Glass.aiff ;;
+        attention) sound=/System/Library/Sounds/Ping.aiff ;;
+        error) sound=/System/Library/Sounds/Basso.aiff ;;
+      esac
+      ;;
+    *)
+      theme=${STATUS_SOUNDS_THEME:-/usr/share/sounds/freedesktop/stereo}
+      case $key in
+        done) sound="$theme/complete.oga" ;;
+        attention) sound="$theme/message-new-instant.oga" ;;
+        error) sound="$theme/dialog-warning.oga" ;;
+      esac
+      ;;
+  esac
+fi
 
 [[ -r $sound ]] || exit 0
 

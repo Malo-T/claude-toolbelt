@@ -119,14 +119,47 @@ anything. No message, no slowdown, and Claude keeps its original behaviour. It i
 The Linux sound theme is set through `STATUS_SOUNDS_THEME`, pointing at a directory holding
 `complete.oga`, `dialog-warning.oga` and `message-new-instant.oga`. It defaults to the freedesktop
 theme at `/usr/share/sounds/freedesktop/stereo`. macOS uses `/System/Library/Sounds` and ignores the
-variable.
+variable. To change or silence one sound rather than the set, use the per-state variables below.
 
 Beyond that it all sits in the `case` statements of [`hooks/play.sh`](hooks/play.sh), in plain sight.
+
+### One state at a time
+
+The theme moves all three sounds together. Each state also answers to a variable of its own, holding
+the path to play instead of the default:
+
+| Variable | State |
+|---|---|
+| `STATUS_SOUNDS_DONE_SOUND` | turn finished |
+| `STATUS_SOUNDS_ERROR_SOUND` | turn finished with an error |
+| `STATUS_SOUNDS_ATTENTION_SOUND` | waiting on you |
+| `STATUS_SOUNDS_IDLE_SOUND` | the 60 s reminder |
+
+Give one an empty string and that state goes quiet while the rest keep their sound:
+
+```jsonc
+{
+  "env": {
+    "STATUS_SOUNDS_DONE_SOUND": "",                                // never again
+    "STATUS_SOUNDS_ATTENTION_SOUND": "/home/you/sounds/knock.oga"  // yours
+  }
+}
+```
+
+Leaving a variable out is not the same as emptying it: out means the default, empty means off. `off`,
+`none`, `no`, `0`, `false` and `null` all read as off too — you set these as JSON strings, and a bare
+`null` in `settings.json` reaches the hook as the four letters `null`, which would otherwise be taken
+for a path.
+
+Each takes a whole path rather than an entry in `STATUS_SOUNDS_THEME`, so a single replacement needs
+no theme directory and the same setting works on macOS, where the theme variable is ignored. An
+unreadable path is silent, like every other missing sound here — which means a typo and a deliberate
+`""` sound identical. Check the path if a state went quiet on you and you did not ask for it.
 
 ### The idle reminder
 
 `STATUS_SOUNDS_IDLE_REMINDER` alone plays the alert ping again a minute after your turn ends, which
-sounds exactly like the question it is not. Name a file and it stops:
+sounds exactly like the question it is not. `STATUS_SOUNDS_IDLE_SOUND` is what tells the two apart:
 
 ```jsonc
 {
@@ -137,9 +170,8 @@ sounds exactly like the question it is not. Name a file and it stops:
 }
 ```
 
-Setting this turns the reminder on by itself, so `IDLE_REMINDER` is only needed to hear the reminder
-as the ordinary alert. The value is a whole path rather than an entry in `STATUS_SOUNDS_THEME`: one
-file needs no theme directory, and the same setting then works on macOS. An unreadable path is
-silent, like every other missing sound here.
+Setting it turns the reminder on by itself, so `IDLE_REMINDER` is only worth setting to hear the
+reminder as the ordinary alert. That fallback is literal: silence the alert with
+`STATUS_SOUNDS_ATTENTION_SOUND` and a reminder with no sound of its own has nothing left to play.
 
 Part of [claude-toolbelt](../../README.md), where install, development and licence live.
