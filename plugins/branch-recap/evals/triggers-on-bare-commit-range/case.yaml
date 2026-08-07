@@ -17,6 +17,6 @@ graders:
   - type: tool_used
     name: skill-fires
     tool: Skill
-    input_match: branch-review
+    input_match: branch-recap
     min: 1
     arm: with-only

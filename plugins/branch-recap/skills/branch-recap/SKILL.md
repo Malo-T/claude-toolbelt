@@ -1,5 +1,5 @@
 ---
-name: branch-review
+name: branch-recap
 description: >-
   Takes stock of what a branch actually changed, before it gets pushed — works out the scope
   itself, then lays the change out group by group in one pass: files touched, what was done and
@@ -19,7 +19,7 @@ description: >-
   `security-review` for that one.
 ---
 
-# Branch Review
+# Branch Recap
 
 Tell the user what happened on their branch, so they can settle it before pushing. The
 situation this exists for: the work got produced fast — often with an assistant holding the
@@ -39,13 +39,13 @@ corridor of round-trips. **One account, one question set, one round of fixes.**
 ## Invocation
 
 ```
-/branch-review [optional restriction]
+/branch-recap [optional restriction]
 ```
 
 Examples:
-- `/branch-review`
-- `/branch-review les 2 derniers commits`
-- `/branch-review seulement le back`
+- `/branch-recap`
+- `/branch-recap les 2 derniers commits`
+- `/branch-recap seulement le back`
 - "je voudrais repasser sur ce que j'ai fait avant d'ouvrir la MR"
 - "on a produit ça en deux heures, qu'est-ce qui a changé au juste avant que je pousse ?"
 

@@ -1,11 +1,11 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
-  "name": "branch-review",
+  "name": "branch-recap",
   "description": "Tells you what your branch actually changed — what was done, why, and what deserves a second look, instead of the diff — then files the fixes into the commits they belong to.",
   "version": "0.2.0",
   "license": "MIT",
   "author": {
     "name": "Malo Toanen"
   },
-  "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/branch-review"
+  "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/branch-recap"
 }

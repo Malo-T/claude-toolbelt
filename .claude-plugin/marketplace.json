@@ -1,17 +1,17 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claude-toolbelt",
-  "description": "A belt of unrelated Claude Code plugins: a guided branch review, a context hygiene setup, and two ways of surfacing a session's state outside the terminal.",
+  "description": "A belt of unrelated Claude Code plugins: a guided branch recap, a context hygiene setup, and two ways of surfacing a session's state outside the terminal.",
   "owner": {
     "name": "Malo Toanen"
   },
   "plugins": [
     {
-      "name": "branch-review",
-      "source": "./plugins/branch-review",
+      "name": "branch-recap",
+      "source": "./plugins/branch-recap",
       "description": "Tells you what your branch actually changed — what was done, why, and what deserves a second look, instead of the diff — then files the fixes into the commits they belong to.",
       "category": "development",
-      "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/branch-review"
+      "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/branch-recap"
     },
     {
       "name": "clean-context",

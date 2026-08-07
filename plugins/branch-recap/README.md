@@ -1,4 +1,4 @@
-# branch-review
+# branch-recap
 
 A Claude Code skill for finding out what is actually on your unmerged branch before you push it.
 It reads every diff, then hands back an account rather than the code: group by group, what was
@@ -17,13 +17,13 @@ wheel. If what you want is a finished findings report, reach for something else:
 `code-review@claude-plugins-official` for pull requests.
 
 It fires on its own from the description in
-[`skills/branch-review/SKILL.md`](skills/branch-review/SKILL.md) — "relis ma branche", "walk me
+[`skills/branch-recap/SKILL.md`](skills/branch-recap/SKILL.md) — "relis ma branche", "walk me
 through my changes", "check my work before I open the PR" — or explicitly as
-`/branch-review:branch-review`.
+`/branch-recap:branch-recap`.
 
 ## Evals
 
-`evals/` holds seven trigger cases. Four that must fire: the branch named without any review
+`evals/` holds seven trigger cases. Four that must fire: the branch named without any recap
 vocabulary, the uncommitted fixes to file into their commits, a bare `HEAD~4..HEAD` range, and the
 module built in an afternoon that its author can no longer account for. Three that must stay
 quiet: a single file handed over for a findings report, a security audit of the same branch

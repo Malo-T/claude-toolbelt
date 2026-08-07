@@ -10,7 +10,7 @@ marketplace. Each stays independent: install the one you want, ignore the rest.
 
 | Plugin | What it does |
 |---|---|
-| [`branch-review`](plugins/branch-review) | Tells you what your unmerged branch actually changed — what was done, why, and what deserves a second look, instead of the diff — then closes on one question set and files the fixes into the commits they belong to. |
+| [`branch-recap`](plugins/branch-recap) | Tells you what your unmerged branch actually changed — what was done, why, and what deserves a second look, instead of the diff — then closes on one question set and files the fixes into the commits they belong to. |
 | [`clean-context`](plugins/clean-context) | Keeps a project's noise — lockfiles, generated code, binaries — out of Claude's default file discovery, while leaving every excluded path one explicit `Read` away. |
 | [`status-icons`](plugins/status-icons) | Marks the terminal tab with an icon that tells "it is done" apart from "it is blocked on you", where Claude Code shows the same `✳` for both. |
 | [`status-sounds`](plugins/status-sounds) | Plays a short sound when Claude has finished, has failed, or wants something from you. |
@@ -22,7 +22,7 @@ icons cost nothing and suit anywhere, sound is intrusive in an open-plan office.
 
 ```sh
 claude plugin marketplace add Malo-T/claude-toolbelt
-claude plugin install branch-review@claude-toolbelt
+claude plugin install branch-recap@claude-toolbelt
 ```
 
 Two commands are needed: `claude plugin install` only resolves names against marketplaces that are
@@ -36,10 +36,10 @@ GitHub.
 
 ```sh
 claude plugin marketplace update claude-toolbelt        # refresh the manifest
-claude plugin update branch-review@claude-toolbelt      # then each plugin you installed
+claude plugin update branch-recap@claude-toolbelt      # then each plugin you installed
 ```
 
-The plugin name has to be qualified with the marketplace — `claude plugin update branch-review`
+The plugin name has to be qualified with the marketplace — `claude plugin update branch-recap`
 alone reports the plugin as not found.
 
 ## Working on a plugin
@@ -52,7 +52,7 @@ on the installed copy until it is pushed.
 and takes precedence over the installed plugin of the same name:
 
 ```sh
-claude --plugin-dir "$PWD/plugins/branch-review"
+claude --plugin-dir "$PWD/plugins/branch-recap"
 ```
 
 The flag is repeatable, and it has to come before any subcommand — `claude plugin list
@@ -108,8 +108,8 @@ Or, for a skill-only plugin, symlink it into the skills directory — any direct
 with no install step and no marketplace:
 
 ```sh
-claude plugin uninstall branch-review@claude-toolbelt
-ln -s "$PWD/plugins/branch-review" ~/.claude/skills/branch-review
+claude plugin uninstall branch-recap@claude-toolbelt
+ln -s "$PWD/plugins/branch-recap" ~/.claude/skills/branch-recap
 ```
 
 Unlike `--plugin-dir`, this one does collide: uninstall the plugin first, or the same name is
@@ -152,7 +152,7 @@ so the cases ship authored-but-unrun. They are written against the schema the cu
 validates: `schema_version`, `execution`, `graders`.
 
 No case grants Bash, Write or Edit. An eval prompt is a real instruction executed by a real agent,
-and a trigger set is mostly near-misses that borrow the skill's vocabulary — `branch-review`'s
+and a trigger set is mostly near-misses that borrow the skill's vocabulary — `branch-recap`'s
 includes "squash les 4 derniers commits", which a run with tools open would carry out on whatever
 repository it found.
 
@@ -162,7 +162,7 @@ Versions are per plugin, in each `plugins/<name>/.claude-plugin/plugin.json`. Bu
 releasing, then tag that plugin by path:
 
 ```sh
-claude plugin tag plugins/branch-review --push    # creates branch-review--v<version>
+claude plugin tag plugins/branch-recap --push    # creates branch-recap--v<version>
 ```
 
 The command checks that `plugin.json` and the marketplace entry agree before it tags, and refuses a
@@ -173,7 +173,7 @@ dirty tree.
 ```
 .claude-plugin/marketplace.json    # the one marketplace, one entry per plugin
 plugins/
-├── branch-review/                 # skill
+├── branch-recap/                 # skill
 ├── clean-context/                 # skill + references + evals
 ├── status-icons/                  # hooks
 └── status-sounds/                 # hooks
