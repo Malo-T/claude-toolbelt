@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "status-sounds",
   "description": "Plays a short sound when Claude has finished, has failed, or wants something from you — so you look up at the right moment without watching the tab.",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "license": "MIT",
   "author": {
     "name": "Malo Toanen"

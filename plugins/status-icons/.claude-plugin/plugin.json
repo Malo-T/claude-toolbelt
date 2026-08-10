@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "status-icons",
   "description": "Marks the terminal tab with an icon that tells \"it is done\" apart from \"it is blocked on you\", where Claude Code shows the same star for both.",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "license": "MIT",
   "author": {
     "name": "Malo Toanen"
