@@ -16,7 +16,7 @@
     {
       "name": "clean-context",
       "source": "./plugins/clean-context",
-      "description": "Keeps a project's noise out of Claude's default context. Today: a managed .ignore, a Glob setting, and a short read-deny list for secrets, leaving every excluded path readable on purpose.",
+      "description": "Keeps a project's noise out of Claude's default context: audit-context measures where the budget is going, ignore-setup applies a managed .ignore, a Glob setting, and a short read-deny list for secrets, leaving every excluded path readable on purpose.",
       "category": "development",
       "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/clean-context"
     },
