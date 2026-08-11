@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: triggers-on-mcp-tool-count-question
+description: >
+  The symptom described without naming any mechanism, on the MCP side of the diagnostic rather
+  than the file side. Must fire the same as a file-noise complaint would.
+tags: [trigger]
+
+execution:
+  prompt: >
+    Combien d'outils MCP sont chargés dans mon contexte en ce moment, et lesquels pèsent le plus ?
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    tool: Skill
+    input_match: audit-context
+    min: 1
+    arm: with-only

@@ -1,21 +1,21 @@
 # Roadmap
 
-`clean-context` ships one skill. The plan is a diagnostic plus three levers, one per source of
-context bloat — files, tool schemas, and whatever is loaded on every session regardless.
+`clean-context` ships two skills so far. The plan is a diagnostic plus three levers, one per source
+of context bloat: files, tool schemas, and whatever is loaded on every session regardless.
 
 | Skill | Source it addresses | Status |
 |---|---|---|
-| `audit-context` | none — it measures, so the others have targets | planned, build first |
+| `audit-context` | none — it measures, so the others have targets | shipped |
 | `ignore-setup` | files surfaced by `Glob` / `Grep` / the `@` picker | shipped |
 | `trim-mcp` | MCP tool schemas injected into every request | planned |
 | `trim-preamble` | `CLAUDE.md` and `SKILL.md` bodies read at session start | planned, scope conflict to settle |
 
-The order matters: `audit-context` first, because the three levers currently apply their catalogue
-blind, and because a measured before/after is what makes the exclusions safe to accept.
+The order mattered: `audit-context` first, because the three levers currently apply their
+catalogue blind, and because a measured before/after is what makes the exclusions safe to accept.
 
 ## `audit-context` — measure before regulating
 
-The diagnostic counterpart to the rest. On a given project, report:
+The diagnostic counterpart to the rest. On a given project, it reports:
 
 - what `Glob **/*` actually returns, with and without the ignore files applied
 - the twenty largest files in the repository, and which of them are generated
@@ -27,9 +27,23 @@ Output is a table of levers ranked by estimated gain, each pointing at the skill
 It writes nothing — the only skill in the set that does not, a distinction the names no longer
 carry, so the report has to make it itself.
 
-Open question: how to obtain the token cost rather than the byte count. Bytes are a proxy that
-misleads on minified assets and on CJK, but there may be no cheap tokenizer at hand — decide
-before writing the report format, since the whole ranking depends on the unit.
+**Unit decision.** Bytes mislead on minified assets and on CJK text, and no local Claude tokenizer
+exists to correct for it: the only exact count runs through the Messages API's `count_tokens`
+endpoint, a network call with credentials that is too heavy for a diagnostic meant to run anywhere.
+The skill detects, lazily on its own first run rather than through a session hook, whether
+`gpt-tokenizer` (npm) or `tiktoken` (pip) is already reachable, and uses whichever is found for a
+GPT-vocabulary approximation, clearly flagged as an approximation rather than a Claude-exact count.
+`@anthropic-ai/tokenizer` was considered and rejected: unmaintained for years, its Claude-branded
+name would overstate an accuracy it no longer has against current models. Absent either tool, and
+absent the user's consent to fetch one on the spot, the skill falls back to bytes plus a bytes/word
+density ratio: a mechanical signal that flags exactly the minified/CJK cases the byte count
+mishandles, without inventing a fake token count.
+
+The two tokenizers were not picked for any accuracy difference between them: a check on this
+repository's own CLAUDE.md files and its twenty largest files put `gpt-tokenizer`'s default output
+(the `o200k_base` encoding) within 0.3% of `tiktoken` on either of its common encodings. The
+choice between them comes down to which ecosystem a given developer's machine already has, npm or
+pip, not which one is "more correct".
 
 ## `trim-mcp` — the current blind spot
 

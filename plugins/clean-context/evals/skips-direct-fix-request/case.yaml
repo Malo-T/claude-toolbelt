@@ -1,0 +1,23 @@
+schema_version: "1.0"
+name: skips-direct-fix-request
+description: >
+  The prompt that already triggers ignore-setup — a request to apply a fix, not to measure first.
+  audit-context must stay quiet here; firing on both skills for the same prompt would mean the
+  boundary between "measure" and "fix" isn't actually load-bearing in either description.
+tags: [near-miss]
+
+execution:
+  prompt: >
+    Ajoute un .claudeignore à ce projet, j'aimerais que tu arrêtes de lire des fichiers inutiles.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: audit-context-stays-quiet
+    tool: Skill
+    input_match: audit-context
+    max: 0
+    arm: with-only

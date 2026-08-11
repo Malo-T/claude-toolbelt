@@ -1,0 +1,25 @@
+schema_version: "1.0"
+name: triggers-on-context-audit-request
+description: >
+  A direct ask to measure context bloat before touching anything. The skill has to fire on its
+  diagnostic framing rather than waiting for a request to actually fix something.
+tags: [trigger]
+
+execution:
+  prompt: >
+    Avant de toucher au projet, fais un état des lieux de ce qui prend de la place dans le
+    contexte de Claude sur ce repo.
+  max_turns: 6
+  # No Bash/Write/Edit granted: an eval prompt is a real instruction, so it must not be able to
+  # touch a repository.
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    tool: Skill
+    input_match: audit-context
+    min: 1
+    arm: with-only

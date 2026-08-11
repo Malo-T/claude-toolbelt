@@ -1,7 +1,22 @@
 # clean-context
 
-A Claude Code plugin that keeps a project's noise out of Claude's default context. One skill ships
-today; [ROADMAP.md](ROADMAP.md) lays out the three that would complete the set.
+A Claude Code plugin that keeps a project's noise out of Claude's default context. Two skills ship
+today; [ROADMAP.md](ROADMAP.md) lays out the two that would complete the set.
+
+## `audit-context`
+
+Measures where a project's context budget is actually going, before any of the other levers touch
+it: what `Glob` discovers with and without ignore files applied, the twenty largest files in the
+repo and which are generated, the cumulative size of every `CLAUDE.md` loaded for the working
+directory, and how many MCP servers and tools are enabled. It ranks the findings by estimated gain
+in a table pointing at the skill that applies each fix.
+
+It is read-only: the point is a measured before/after, not another blind application of a
+catalogue. See [`skills/audit-context/SKILL.md`](skills/audit-context/SKILL.md) for the full
+measurement steps and the byte-versus-token unit decision.
+
+It fires on its own from that description ("audit mon contexte", "pourquoi mon contexte est
+plein", "combien d'outils MCP sont chargés") or explicitly as `/clean-context:audit-context`.
 
 ## `ignore-setup`
 
@@ -25,7 +40,12 @@ contexte", "tu passes ton temps à lire du code généré" — or explicitly as
 
 `evals/` holds three trigger cases for `ignore-setup`: the `.claudeignore` request (must fire, and
 must correct the premise), the symptom described without naming any mechanism (must fire), and a
-one-off permission tweak (must stay quiet — that is `update-config`'s job).
+one-off permission tweak (must stay quiet, that is `update-config`'s job).
+
+It also holds three cases for `audit-context`: a direct ask to measure context bloat (must fire),
+a question about MCP tool count with no mechanism named (must fire), and the exact prompt that
+already triggers `ignore-setup` (must stay quiet on `audit-context`'s side, since that prompt asks
+for a fix, not a measurement).
 
 How to run them, and why they ship unrun: root [README](../../README.md#evals).
 
