@@ -12,6 +12,10 @@ readable on purpose. Three layers, one command.
 /clean-context:ignore-setup
 ```
 
+Measuring the before/after counts and writing patterns from the catalogue below is mechanical —
+don't deliberate over it. Save the actual thinking for the guardrails: what counts as generated,
+and when to ask before excluding something.
+
 ## `.claudeignore` does not exist
 
 If that is what was asked for, say so once and move on — it is the most common wrong turn here.
