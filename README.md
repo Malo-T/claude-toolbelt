@@ -11,7 +11,7 @@ marketplace. Each stays independent: install the one you want, ignore the rest.
 | Plugin | What it does |
 |---|---|
 | [`branch-recap`](plugins/branch-recap) | Tells you what your unmerged branch actually changed — what was done, why, and what deserves a second look, instead of the diff — then closes on one question set and files the fixes into the commits they belong to. |
-| [`clean-context`](plugins/clean-context) | Keeps a project's noise — lockfiles, generated code, binaries — out of Claude's default file discovery, while leaving every excluded path one explicit `Read` away. |
+| [`clean-context`](plugins/clean-context) | Measures where a project's context budget is going, then keeps the noise — lockfiles, generated code, binaries — out of Claude's default file discovery, while leaving every excluded path one explicit `Read` away. |
 | [`status-icons`](plugins/status-icons) | Marks the terminal tab with an icon that tells "it is done" apart from "it is blocked on you", where Claude Code shows the same `✳` for both. |
 | [`status-sounds`](plugins/status-sounds) | Plays a short sound when Claude has finished, has failed, or wants something from you. |
 
