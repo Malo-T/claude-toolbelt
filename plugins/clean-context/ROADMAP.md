@@ -92,12 +92,17 @@ pip, not which one is "more correct".
 
 ## Backlog
 
-Four tickets, ordered by the share of injected volume each addresses. Every one sits on this
-plugin's side of the `/doctor` line, and every one names the measurement that justifies it: rerun
-`audit-context` Step 5 on a real project, and a ticket whose number collapses should be closed
-rather than carried.
+Four tickets, ordered by the share of injected volume each addresses, and tracked as GitHub issues
+[#5][cc1], [#6][cc2], [#7][cc3] and [#4][cc4]. Every one sits on this plugin's side of the `/doctor`
+line, and every one names the measurement that justifies it: rerun `audit-context` Step 5 on a real
+project, and a ticket whose number collapses should be closed rather than carried.
 
-### CC-1 — Bash output discipline
+[cc1]: https://github.com/Malo-T/claude-toolbelt/issues/5
+[cc2]: https://github.com/Malo-T/claude-toolbelt/issues/6
+[cc3]: https://github.com/Malo-T/claude-toolbelt/issues/7
+[cc4]: https://github.com/Malo-T/claude-toolbelt/issues/4
+
+### CC-1 — Bash output discipline ([#5][cc1])
 
 *49% of injected volume, ~3.5k tokens per session on this repository.* The single largest source,
 and the one with no lever at all today. Sessions pay for whole test suites, unbounded `git log`,
@@ -109,7 +114,7 @@ should wait until the cheap version proves insufficient. Settle first whether th
 `clean-context` at all — a `CLAUDE.md` convention is not a plugin, and shipping it as one would be
 the same mistake `trim-mcp` made.
 
-### CC-2 — Size × re-reads as a first-class signal
+### CC-2 — Size × re-reads as a first-class signal ([#6][cc2])
 
 *43% of injected volume goes through `Read`; the top file cost 36k tokens as 2.4k read fifteen
 times.* Step 5 surfaces the product; nothing acts on it. The levers are unlike anything else in this
@@ -118,7 +123,7 @@ open the part they need, or write down the invariant that keeps sending them bac
 judgment calls a skill can propose but should never apply on its own. Likely an extension of
 `audit-context`'s report rather than a new skill — it has the data already.
 
-### CC-3 — `.gitattributes -diff` for generated files
+### CC-3 — `.gitattributes -diff` for generated files ([#7][cc3])
 
 *`git` accounted for 40k tokens over 129 calls.* A `git diff` touching a lockfile injects the entire
 diff. Marking those paths `-diff` in `.gitattributes` collapses it to `Binary files a/… and b/…
@@ -130,7 +135,7 @@ than a personal setting like `.claude/settings.local.json`. And it blinds the hu
 diff` on those paths, `git add -p` included, which is fine for a lockfile and wrong for anything
 someone reviews by hand.
 
-### CC-4 — `read-guard`
+### CC-4 — `read-guard` ([#4][cc4])
 
 *`Read` is the second-largest source at 43%.* A `PreToolUse` hook warning when a `Read` targets a
 large generated file. It completes the plugin's asymmetry: an ignore file hides a path from
@@ -142,9 +147,10 @@ smaller half while paying the full intrusiveness cost.
 
 ## Abandoned
 
-**`trim-mcp`** — written, never published, then dropped. It inventoried a project's `.mcp.json`
-servers, crossed them against `mcp__<server>__*` calls in that project's transcripts, and wrote
-`disabledMcpjsonServers` into `.claude/settings.local.json`. Two findings, in the order they landed:
+**`trim-mcp`** ([#2][x2], closed) — written, never published, then dropped. It inventoried a
+project's `.mcp.json` servers, crossed them against `mcp__<server>__*` calls in that project's
+transcripts, and wrote `disabledMcpjsonServers` into `.claude/settings.local.json`. Two findings, in
+the order they landed:
 
 1. **The gain it advertised no longer exists.** MCP tool schemas sit deferred behind `ToolSearch` by
    default: only each tool's *name* stays resident, and Claude Code fetches the schema on demand. A
@@ -173,8 +179,8 @@ Two corrections worth keeping from it:
   specifically, the `disableClaudeAiConnectors` setting turns all of them off at once and destroys
   nothing.
 
-**`trim-preamble`** — moving long `CLAUDE.md` and `SKILL.md` sections to `references/` and leaving
-a pointer. It already had a scope conflict to settle against
+**`trim-preamble`** ([#3][x3], closed) — moving long `CLAUDE.md` and `SKILL.md` sections to
+`references/` and leaving a pointer. It already had a scope conflict to settle against
 `claude-md-management:claude-md-improver`; `/doctor`'s checks 2 through 4 then took the whole idea —
 dedup of local memory files against checked-in ones, deleting content a session could derive on its
 own, migrating always-loaded guidance to lazy loading — which leaves nothing to carve out.
@@ -182,6 +188,9 @@ own, migrating always-loaded guidance to lazy loading — which leaves nothing t
 **Auditing user-scope MCP servers across all projects** — `/doctor`'s check 1 scans transcripts from
 every project the user has opened. That was the missing piece, and it shipped before anyone here
 specified the skill.
+
+[x2]: https://github.com/Malo-T/claude-toolbelt/issues/2
+[x3]: https://github.com/Malo-T/claude-toolbelt/issues/3
 
 ## Considered, not planned
 
