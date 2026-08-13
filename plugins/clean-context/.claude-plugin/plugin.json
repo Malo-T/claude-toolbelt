@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "clean-context",
   "description": "Keeps a project's noise out of Claude's default context: audit-context measures where the budget is going, ignore-setup applies a managed .ignore, a Glob setting, and a short read-deny list for secrets, leaving every excluded path readable on purpose.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "MIT",
   "author": {
     "name": "Malo Toanen"

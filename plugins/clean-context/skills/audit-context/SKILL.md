@@ -6,8 +6,9 @@ description: Measures where a project's Claude context is going before applying 
 # Audit Context
 
 Read-only. Measures four sources of context bloat, then ranks the levers that address them.
-No file is written and no setting is changed. If the report leads to a fix, that fix lives in
-`ignore-setup` (shipped) or `trim-mcp` / `trim-preamble` (planned, see `../../ROADMAP.md`).
+No file is written and no setting is changed. Fixes to the repository's own reach live in
+`ignore-setup`; fixes to the Claude Code setup around it — `CLAUDE.md` bulk, unused skills, plugins
+and MCP servers — live in the built-in `/doctor`, not here (see `../../ROADMAP.md`).
 
 ```
 /clean-context:audit-context
@@ -15,9 +16,10 @@ No file is written and no setting is changed. If the report leads to a fix, that
 
 ## This skill does not fix anything
 
-If the ask mid-run turns into "et maintenant exclus-les" or "désactive ce serveur", report what
-the measurement found and hand off to the skill that applies it; do not start editing. That
-boundary is the only thing separating this skill from `ignore-setup`.
+If the ask mid-run turns into "et maintenant exclus-les", report what the measurement found and
+hand off to `ignore-setup`; do not start editing. That boundary is the only thing separating the two
+skills. If it turns into "désactive ce serveur" or "allège mon CLAUDE.md", hand off outside this
+plugin instead: point at `/doctor`, which acts on both and writes the settings this skill only reads.
 
 ## Step 0. State of play
 
@@ -141,8 +143,8 @@ fi
 echo "TOTAL: $total bytes"
 ```
 
-No CLAUDE.md anywhere means a total of zero. Say there is nothing here for `trim-preamble` to do
-and move on, rather than treating zero as an error. If a tokenizer is available (Step 0bis), add a
+No CLAUDE.md anywhere means a total of zero. Say the preamble row has nothing to trim and move on,
+rather than treating zero as an error. If a tokenizer is available (Step 0bis), add a
 token count per file and for the total alongside the byte counts.
 
 ## Step 4. MCP servers and the tools they contribute
@@ -155,7 +157,19 @@ server anywhere means zero servers, zero tools: skip straight to that report row
 Tool count per server: the session running this skill has its own tools grouped by
 `mcp__<server>__` prefix, directly visible, or discoverable via `ToolSearch` for anything deferred.
 The count per prefix is what that server is contributing to context in *this* session. Cross-check
-every group against the health line from `claude mcp list`:
+every group against the health line from `claude mcp list`.
+
+**Deferred or resident — establish this before quoting any cost.** MCP tool schemas sit deferred
+behind `ToolSearch` by default: only the tool *name* stays resident, and Claude Code fetches the
+schema on demand, so fifty deferred tools cost a few hundred tokens against the tens of thousands a
+resident set would. Read your own context to tell the two apart: deferred tools arrive as a
+names-only list in a system-reminder, resident ones carry full schemas in the tool list. A server
+opts out per tool via `anthropic/alwaysLoad` in the tool's `_meta`, which the server decides and no
+setting here overrides. Count only the names for a deferred server, report its resident cost as
+roughly zero, and never present it as a context saving waiting to be made. Its one honest signal is
+invocation count, and that measurement belongs to `/doctor`'s check 1.
+
+Two health lines change what a count means:
 
 - A server reported "Needs authentication" that shows exactly two tools
   (`mcp__<server>__authenticate`, `mcp__<server>__complete_authentication`) is showing an OAuth
@@ -171,15 +185,15 @@ and keep it visually distinct from Steps 1 through 3, which are deterministic fi
 ## Step 5. Rank and report
 
 Tag each lever with its cost shape before ranking anything, since the units differ in kind:
-**recurring** (paid on every request, MCP tool schemas), **once** (paid once per session,
-CLAUDE.md), **conditional** (paid only if the file is actually read, Glob and generated-file
-noise). Order the table recurring → once → conditional, and by magnitude within each group; never
-collapse the three into one number.
+**recurring** (paid on every request — MCP tool schemas, but only those actually resident, per
+Step 4), **once** (paid once per session, CLAUDE.md), **conditional** (paid only if the file is
+actually read, Glob and generated-file noise). Order the table recurring → once → conditional, and
+by magnitude within each group; never collapse the three into one number.
 
-| Lever | Current cost | Est. gain | Cost shape | Confidence | Skill |
+| Lever | Current cost | Est. gain | Cost shape | Confidence | Where the fix lives |
 |---|---|---|---|---|---|
-| MCP tool schemas | … servers, … tools contributed | … tools removable | recurring, per request | low-medium, session snapshot, see Step 4 caveats | trim-mcp (planned) |
-| CLAUDE.md preamble | … across … files | up to … | once, per session | high, direct read | trim-preamble (planned) |
+| MCP tool schemas | … servers, … tools, of which … resident | … resident tools; deferred ones ≈ 0 | recurring only if resident | low-medium, session snapshot, see Step 4 caveats | `/doctor` check 1 |
+| CLAUDE.md preamble | … across … files | up to … | once, per session | high, direct read | `/doctor` checks 2–4 |
 | Glob noise | … files beyond what obeys ignore | … files hidden | conditional, per search | high, direct measurement | ignore-setup |
 | Largest generated files | … of the top 20 | up to … | conditional, per read | medium, pattern + marker heuristic, not exhaustive | ignore-setup (extend patterns) |
 

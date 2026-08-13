@@ -1,15 +1,19 @@
 # clean-context
 
-A Claude Code plugin that keeps a project's noise out of Claude's default context. Two skills ship
-today; [ROADMAP.md](ROADMAP.md) lays out the two that would complete the set.
+A Claude Code plugin that keeps a project's noise out of Claude's default context. Two skills, and
+the set is closed: both cover the repository's own content and how much of it Claude reads by
+default. The Claude Code setup around it — `CLAUDE.md` bulk, unused skills, plugins and MCP servers —
+belongs to the built-in `/doctor`. [ROADMAP.md](ROADMAP.md) records where that line falls, and which
+skills it retired here.
 
 ## `audit-context`
 
 Measures where a project's context budget is actually going, before any of the other levers touch
 it: what `Glob` discovers with and without ignore files applied, the twenty largest files in the
 repo and which are generated, the cumulative size of every `CLAUDE.md` loaded for the working
-directory, and how many MCP servers and tools are enabled. It ranks the findings by estimated gain
-in a table pointing at the skill that applies each fix.
+directory, and how many MCP servers and tools are enabled — separating tool schemas that are
+actually resident from the ones deferred behind `ToolSearch`, which cost about nothing. It ranks the
+findings by estimated gain in a table pointing at where each fix lives, here or in `/doctor`.
 
 It is read-only: the point is a measured before/after, not another blind application of a
 catalogue. See [`skills/audit-context/SKILL.md`](skills/audit-context/SKILL.md) for the full
