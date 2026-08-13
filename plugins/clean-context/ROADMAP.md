@@ -1,7 +1,7 @@
 # Roadmap
 
-`clean-context` ships two skills, and the set is closed. Both cover the **repository's own content**
-and how much of it Claude reads by default.
+`clean-context` ships two skills. Both cover the **repository's own content** and how much of it
+Claude reads by default.
 
 | Skill | Source it addresses | Status |
 |---|---|---|
@@ -10,6 +10,31 @@ and how much of it Claude reads by default.
 
 `audit-context` came first, because `ignore-setup` otherwise applies its catalogue blind, and
 because a measured before/after is what makes the exclusions safe to accept.
+
+## What the transcripts said
+
+Every estimate in this plugin used to come from disk: file sizes, `Glob` counts, `CLAUDE.md` bytes.
+Joining `tool_use` to `tool_result` across 67 sessions of this repository gave the first measurement
+of what sessions actually pulled into context — roughly 472k tokens — and it disagreed with the
+disk-based ranking on nearly every point:
+
+| Tool | Calls | Tokens est. | Share |
+|---|---|---|---|
+| `Bash` | 783 | 232 800 | 49% |
+| `Read` | 200 | 203 500 | 43% |
+| `Edit` | 214 | 10 100 | 2% |
+| `Grep` | 9 | 1 300 | 0.3% |
+| `Glob` | 11 | 543 | 0.1% |
+
+`Glob` and `Grep` — everything `ignore-setup` exists to narrow — account for 0.4% of the volume.
+The heaviest single file was a 2.4k-token `SKILL.md` opened fifteen times across sessions, at 36k
+tokens — legitimate hand-written source that no exclusion rule would ever target. Cost turns out to
+be size multiplied by re-reads, and neither this plugin nor `/doctor` had measured that product.
+
+Three consequences. `audit-context` gained Step 5 so the measurement precedes the ranking rather
+than trailing it. The backlog below came out of the same numbers. And every ticket in it carries
+the measurement that justifies it, so a later run that contradicts the figure retires the ticket
+rather than inheriting it.
 
 ## Where this plugin stops: `/doctor`
 
@@ -39,10 +64,13 @@ The diagnostic counterpart to `ignore-setup`. On a given project, it reports:
 - the cumulative size of every `CLAUDE.md` loaded automatically for this working directory,
   walking the nesting upward
 - how many MCP servers are enabled here and how many tools they contribute
+- what the newest 50 sessions actually injected, per tool, command and file (Step 5)
 
-Output is a table of levers ranked by estimated gain. The last two rows hand off to `/doctor` rather
-than to a skill here: they measure a setup this plugin never touches. Drop them and the report covers
-a fraction of the budget while implying the whole.
+Output is a table of levers ranked by estimated gain, with Step 5's observed cost beside each
+estimate. Where the two disagree the observation wins: one is what the project could cost, the other
+is what it did. Two rows hand off to `/doctor` rather than to a skill here — they measure a setup
+this plugin never touches. Drop them and the report covers a fraction of the budget while implying
+the whole.
 
 **Unit decision.** Bytes mislead on minified assets and on CJK text, and no local Claude tokenizer
 exists to correct for it: the only exact count runs through the Messages API's `count_tokens`
@@ -62,6 +90,56 @@ repository's own CLAUDE.md files and its twenty largest files put `gpt-tokenizer
 choice between them comes down to which ecosystem a given developer's machine already has, npm or
 pip, not which one is "more correct".
 
+## Backlog
+
+Four tickets, ordered by the share of injected volume each addresses. Every one sits on this
+plugin's side of the `/doctor` line, and every one names the measurement that justifies it: rerun
+`audit-context` Step 5 on a real project, and a ticket whose number collapses should be closed
+rather than carried.
+
+### CC-1 — Bash output discipline
+
+*49% of injected volume, ~3.5k tokens per session on this repository.* The single largest source,
+and the one with no lever at all today. Sessions pay for whole test suites, unbounded `git log`,
+verbose builds and `cat` on files that wanted `sed -n`. Two shapes are worth trying, in this order:
+a handful of lines in `CLAUDE.md` (`-n` on log commands, `| tail`, `--quiet`, redirect-then-read),
+which costs about 50 resident tokens per session against a 3.5k-token target and needs no skill at
+all; or a `PreToolUse` hook that warns on known-unbounded patterns, which is more intrusive and
+should wait until the cheap version proves insufficient. Settle first whether this belongs to
+`clean-context` at all — a `CLAUDE.md` convention is not a plugin, and shipping it as one would be
+the same mistake `trim-mcp` made.
+
+### CC-2 — Size × re-reads as a first-class signal
+
+*43% of injected volume goes through `Read`; the top file cost 36k tokens as 2.4k read fifteen
+times.* Step 5 surfaces the product; nothing acts on it. The levers are unlike anything else in this
+plugin, since the files are legitimate and exclusion is the wrong answer: split the file so sessions
+open the part they need, or write down the invariant that keeps sending them back. Both are
+judgment calls a skill can propose but should never apply on its own. Likely an extension of
+`audit-context`'s report rather than a new skill — it has the data already.
+
+### CC-3 — `.gitattributes -diff` for generated files
+
+*`git` accounted for 40k tokens over 129 calls.* A `git diff` touching a lockfile injects the entire
+diff. Marking those paths `-diff` in `.gitattributes` collapses it to `Binary files a/… and b/…
+differ`, and `--stat` to `Bin 6 -> 10 bytes` — verified on a scratch repository, not assumed. This is
+the natural second lever for `ignore-setup`: same catalogue of generated paths, one more file to
+write. Two differences from everything that skill writes today, both of which have to reach the
+user before anything is written. `.gitattributes` is checked in, so this is a team decision rather
+than a personal setting like `.claude/settings.local.json`. And it blinds the human's own `git
+diff` on those paths, `git add -p` included, which is fine for a lockfile and wrong for anything
+someone reviews by hand.
+
+### CC-4 — `read-guard`
+
+*`Read` is the second-largest source at 43%.* A `PreToolUse` hook warning when a `Read` targets a
+large generated file. It completes the plugin's asymmetry: an ignore file hides a path from
+discovery but never blocks `Read`, so the reading side has no guardrail at all. Held back for the
+same reason as before — a hook is more intrusive than a skill and the false-positive rate is
+unknown — but the measurement now argues for it where previously only symmetry did. Sequence it
+after CC-1: if command output is half the problem, a hook that only watches `Read` fixes the
+smaller half while paying the full intrusiveness cost.
+
 ## Abandoned
 
 **`trim-mcp`** — written, never published, then dropped. It inventoried a project's `.mcp.json`
@@ -78,8 +156,10 @@ servers, crossed them against `mcp__<server>__*` calls in that project's transcr
    evidence — usage counters plus transcripts across every project rather than one — and applies it
    to the same `disabledMcpjsonServers` in the same `.claude/settings.local.json`.
 
-Then the arithmetic. Its 1016-character description cost roughly 254 resident tokens in every session
-of every project, to save on the order of 140 tokens once, in a single project.
+Then the arithmetic. `/context` priced its listing entry at ~350 resident tokens, paid in every
+session of every project, against savings on the order of 140 tokens once, in a single project. The
+chars/4 estimate that first made the case said 254, so the real balance was worse than the one that
+retired it.
 
 Two corrections worth keeping from it:
 
@@ -110,8 +190,9 @@ new generated directory). Not a separate skill: `ignore-setup` already detects i
 and rewrites the body, so this is a re-run, and the guardrail that a second run be a no-op already
 covers it.
 
-**`read-guard`** — a `PreToolUse` hook warning when a `Read` targets a large generated file. It
-completes the plugin's asymmetry (an ignore file hides a path but never blocks `Read`, so the
-lecture side has no guardrail at all), and it sits squarely on this plugin's side of the `/doctor`
-line — the repository's own files. But a hook is more intrusive than a skill and the false positive
-rate is unknown. Revisit if `audit-context` shows the case happens often enough to pay for itself.
+**Narrowing `Glob` further** — more patterns, tighter defaults, a second exclusion layer. Step 5
+measured `Glob` and `Grep` at 0.4% of injected volume on this repository, so there is close to
+nothing left to win. The caveat that keeps this a "not planned" rather than a "never": this
+repository is small, mostly markdown, and has no build. A monorepo carrying `node_modules` and a
+generated client would very likely put `Glob` back near the top, which is the whole reason Step 5
+measures instead of assuming.
