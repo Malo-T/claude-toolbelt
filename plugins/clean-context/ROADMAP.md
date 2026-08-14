@@ -36,6 +36,13 @@ than trailing it. The backlog below came out of the same numbers. And every tick
 the measurement that justifies it, so a later run that contradicts the figure retires the ticket
 rather than inheriting it.
 
+**That table keeps the record on the wrong axis.** Grouping by tool answers "through which
+channel", a different question from "why". Rerun across three unrelated projects, the split moves —
+`Bash` 46 / `Read` 45 here, `Read` 53 / `Bash` 42 elsewhere — while the `Bash` column proves to be
+mostly files read through a shell. Reprojected onto files, across both channels, twelve of them
+carry 88% of the attributable volume here, all hand-written, all reopened across many sessions.
+Step 5 now ends on that per-file table, and CC-1 went to Abandoned on the strength of it.
+
 ## Where this plugin stops: `/doctor`
 
 Claude Code 2.1.229 ships a built-in skill, reachable as `/doctor`, that health-checks the
@@ -92,36 +99,32 @@ pip, not which one is "more correct".
 
 ## Backlog
 
-Four tickets, ordered by the share of injected volume each addresses, and tracked as GitHub issues
-[#5][cc1], [#6][cc2], [#7][cc3] and [#4][cc4]. Every one sits on this plugin's side of the `/doctor`
-line, and every one names the measurement that justifies it: rerun `audit-context` Step 5 on a real
-project, and a ticket whose number collapses should be closed rather than carried.
+Three tickets, ordered by the share of injected volume each addresses, and tracked as GitHub issues
+[#6][cc2], [#7][cc3] and [#4][cc4]. Every one sits on this plugin's side of the `/doctor` line, and
+every one names the measurement that justifies it: rerun `audit-context` Step 5 on a real project,
+and a ticket whose number collapses should be closed rather than carried. CC-1 went that way, on a
+wrong attribution rather than a collapsing number; see Abandoned.
 
 [cc1]: https://github.com/Malo-T/claude-toolbelt/issues/5
 [cc2]: https://github.com/Malo-T/claude-toolbelt/issues/6
 [cc3]: https://github.com/Malo-T/claude-toolbelt/issues/7
 [cc4]: https://github.com/Malo-T/claude-toolbelt/issues/4
 
-### CC-1 — Bash output discipline ([#5][cc1])
+### CC-2 — Size × reopenings as a first-class signal ([#6][cc2])
 
-*49% of injected volume, ~3.5k tokens per session on this repository.* The single largest source,
-and the one with no lever at all today. Sessions pay for whole test suites, unbounded `git log`,
-verbose builds and `cat` on files that wanted `sed -n`. Two shapes are worth trying, in this order:
-a handful of lines in `CLAUDE.md` (`-n` on log commands, `| tail`, `--quiet`, redirect-then-read),
-which costs about 50 resident tokens per session against a 3.5k-token target and needs no skill at
-all; or a `PreToolUse` hook that warns on known-unbounded patterns, which is more intrusive and
-should wait until the cheap version proves insufficient. Settle first whether this belongs to
-`clean-context` at all — a `CLAUDE.md` convention is not a plugin, and shipping it as one would be
-the same mistake `trim-mcp` made.
+*Twelve files carry 88% of the attributable injected volume on this repository, and the worst case
+measured anywhere was a 5.2k-token script opened 295 times across 28 sessions for 169k tokens — 32×
+its own weight.* Step 5 now reports the product, across both channels rather than through `Read`
+alone; nothing acts on it yet. The levers are unlike anything else in this plugin, since the files
+are legitimate and exclusion is the wrong answer. The `sessions` column picks between them. Many
+opens inside one session means the file was the work, and nothing needs fixing. Many opens spread
+across many sessions means the knowledge is not written down: split the file if it is large, move
+its one fact into resident context if it is small. All three are judgment calls a skill can propose
+but must never apply on its own.
 
-### CC-2 — Size × re-reads as a first-class signal ([#6][cc2])
-
-*43% of injected volume goes through `Read`; the top file cost 36k tokens as 2.4k read fifteen
-times.* Step 5 surfaces the product; nothing acts on it. The levers are unlike anything else in this
-plugin, since the files are legitimate and exclusion is the wrong answer: split the file so sessions
-open the part they need, or write down the invariant that keeps sending them back. Both are
-judgment calls a skill can propose but should never apply on its own. Likely an extension of
-`audit-context`'s report rather than a new skill — it has the data already.
+`audit-context` Step 5 already carries the measurement (per-file table, `opens`/`sessions`/`ratio`).
+This ticket now covers the recommending side alone: turning a row of that table into a named
+candidate with a named lever, still as a proposal.
 
 ### CC-3 — `.gitattributes -diff` for generated files ([#7][cc3])
 
@@ -141,11 +144,37 @@ someone reviews by hand.
 large generated file. It completes the plugin's asymmetry: an ignore file hides a path from
 discovery but never blocks `Read`, so the reading side has no guardrail at all. Held back for the
 same reason as before — a hook is more intrusive than a skill and the false-positive rate is
-unknown — but the measurement now argues for it where previously only symmetry did. Sequence it
-after CC-1: if command output is half the problem, a hook that only watches `Read` fixes the
-smaller half while paying the full intrusiveness cost.
+unknown — but the measurement now argues for it where previously only symmetry did. The old note to
+sequence it after CC-1 is void. The per-file table both helps and hurts this ticket: it confirms
+`Read` is expensive, and it shows that not one of the twelve files carrying that cost is generated,
+so `read-guard` would not have fired on any of them. It covers a case this repository does not
+have. Build it once some project's per-file table puts a generated file on top.
 
 ## Abandoned
+
+**CC-1, Bash output discipline** ([#5][cc1], closed) — the ticket read `Bash` at 49% of injected
+volume and blamed whole test suites, unbounded `git log`, verbose builds and `cat` on files that
+wanted `sed -n`, proposing a few lines of `CLAUDE.md` convention against them. Measuring again
+before writing anything contradicted each of those claims. Across the 50 newest sessions of three
+unrelated projects — this repository, a shell project with a test suite, and a client project — the
+named causes never reached 12% combined, and the median `Bash` call stayed between 64 and 124
+tokens, so there was no diffuse verbosity to discipline:
+
+| `Bash` family | this repo | shell project | client project |
+|---|---|---|---|
+| reading files (`cat`, `head`, `sed -n`, chained `echo … && cat …`) | 38% | 57% | 64% |
+| `git diff` / `git show` | 21% | 19% | 3% |
+| `git log` | 7% | 3% | 4% |
+| tests and builds | 2% | 0.1% | 5% |
+
+The shell project has a test suite; it accounted for 285 tokens out of 367k. `Bash` mostly carries
+files read through a shell, which puts it on the same ledger as `Read` — and the tool split itself
+never settles, coming out `Bash` 46 / `Read` 45 here, `Read` 53 / `Bash` 42 on the second project,
+`Bash` 50 / `Read` 44 on the third. Reprojected onto files, 88% of the volume here fell on twelve
+hand-written files reopened across many sessions. Step 5's aggregation produced the tool axis, and
+the tool axis produced CC-1. CC-2 carries forward what was real in it. Both proposed shapes went
+with it: no `CLAUDE.md` convention, whose resident cost would have repeated `trim-mcp`'s arithmetic
+below, and no `PreToolUse` hook guarding a cause nobody had established.
 
 **`trim-mcp`** ([#2][x2], closed) — written, never published, then dropped. It inventoried a
 project's `.mcp.json` servers, crossed them against `mcp__<server>__*` calls in that project's

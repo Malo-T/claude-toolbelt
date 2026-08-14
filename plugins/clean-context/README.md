@@ -16,10 +16,19 @@ actually resident from the ones deferred behind `ToolSearch`, which cost about n
 
 Then it stops estimating and measures. Joining `tool_use` to `tool_result` across the newest 50
 transcripts tells you what past sessions really pulled in, per tool, per command and per file. On
-this repository that measurement inverted the ranking: `Bash` and `Read` carried 92% of the volume,
-`Glob` and `Grep` 0.4%, and the costliest file was a small `SKILL.md` reopened fifteen times. The
-report puts that observed cost beside each disk estimate, and where they disagree the observation
-wins. Each row points at where its fix lives, here or in `/doctor`.
+this repository that measurement inverted the ranking: `Bash` and `Read` carried 92% of the volume
+and `Glob` and `Grep` 0.4%, everything `ignore-setup` exists to narrow.
+
+Those per-tool counts open the step. Knowing which tool opened a file tells you nothing about where
+the tokens went, and most of what `Bash` costs is files read through a shell, so the step closes by
+regrouping across both channels, per file, counting the distinct sessions that reopened each one
+against its size on disk. Twelve files carry 88% of the attributable volume here; the heaviest case
+measured anywhere was a 5.2k-token script opened 295 times across 28 sessions, 32× its own weight.
+None of them is generated, so no exclusion rule would have touched any of them. Three levers apply
+instead — split the file, write down the invariant that keeps sending sessions back, or move a
+small file's one fact into resident context — and the skill only ever proposes them. The report
+puts observed cost beside each disk estimate, and where they disagree the observation wins. Each
+row points at where its fix lives, here or in `/doctor`.
 
 It is read-only: the point is a measured before/after, not another blind application of a
 catalogue. See [`skills/audit-context/SKILL.md`](skills/audit-context/SKILL.md) for the full

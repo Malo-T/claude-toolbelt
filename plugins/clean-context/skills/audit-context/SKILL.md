@@ -191,6 +191,9 @@ levers in a different order. On this plugin's own repository, 67 sessions put 92
 injected volume through `Bash` and `Read`, and 0.4% through `Glob` and `Grep` — the reverse of what
 the disk-based ranking suggests. Run it before trusting the order of the table in Step 6.
 
+The step ends on a per-file table. Do not stop at the tool counts it opens with: they name a
+channel, and the lever is never "use that tool less".
+
 Transcripts live at `~/.claude/projects/<slug>/<session-uuid>.jsonl`, one JSON object per line,
 `<slug>` the absolute project path with every `/` replaced by `-`. Each `tool_use` in an assistant
 message pairs with a `tool_result` in the next user message, joined on `tool_use_id`. The result's
@@ -202,13 +205,17 @@ tmp=$(mktemp -d)
 ls -t "$dir"/*.jsonl 2>/dev/null | head -50 > "$tmp/files"   # cap: newest 50 sessions
 
 while read -r f; do
-  jq -c 'select(.type=="assistant") | .message.content[]? | select(.type=="tool_use") |
-         {id, name, p: (.input.file_path // ""),
-          c: (.input.command // "" | split("\n")[0] | .[0:60])}' "$f"
+  jq -c 'select(.type=="assistant") | .message.content[]? |
+         select(.type=="tool_use" and .id != null) |
+         {id, name, s: (input_filename | split("/") | last),
+          p: (.input.file_path // ""),
+          c: (.input.command // "" | split("\n")[0] | .[0:60]),
+          f: [ (.input.command // "") | match("[A-Za-z0-9_./-]+\\.[A-Za-z0-9]+"; "g") | .string ]}' "$f"
 done < "$tmp/files" | jq -s . > "$tmp/uses.json"
 
 while read -r f; do
-  jq -c 'select(.type=="user") | .message.content[]? | select(.type=="tool_result") |
+  jq -c 'select(.type=="user") | .message.content[]? |
+         select(.type=="tool_result" and .tool_use_id != null) |
          {id: .tool_use_id,
           n: (.content | if type=="array" then (map(.text // "") | join("")) else (. // "") end
                        | length)}' "$f"
@@ -228,16 +235,82 @@ and a wrong attribution here would reorder the whole report.
 
 Then break down the two top spenders, since "Bash costs a lot" is not yet actionable. Regroup the
 same join by `.t.c` for `Bash` and by `.t.p` for `Read`, reporting calls and tokens per command
-prefix and per file path. Report the top ten of each.
+prefix and per file path. Report the top ten of each, and treat both as symptoms.
 
-**Read the `Read` breakdown as a product, not a size.** A file's cost here is its size multiplied by
-how often sessions reopened it. The largest entry on this repository was a 2.4k-token `SKILL.md`
-read fifteen times, costing more than any generated file — which no ignore rule would ever have
-touched, because nothing about it is noise. When a modest file tops this list, the lever is not
-exclusion: split it, or document the invariant that keeps sending sessions back to it.
+**The tool axis says which channel a file came through, and stops there.** It also moves: over the
+50 newest sessions of three unrelated projects, the split came out `Bash` 46% / `Read` 45% on this
+repository, `Read` 53% / `Bash` 42% on a shell project, `Bash` 50% / `Read` 44% on a third. The
+`Bash` breakdown holds steady where the split does not — reading files (`cat`, `head`, `sed -n`,
+and chained `echo … && cat …` dumps) took 38%, 57% and 64% of `Bash` volume on those same three,
+while test suites and builds never passed 5% and the median `Bash` call stayed under 130 tokens. Do
+not go looking for verbose command output. `Bash` mostly carries files read through a shell, which
+puts them on the same ledger as `Read`.
 
-Two figures to keep honest in the report: the window covered (how many sessions, over what date
-range) and the fact that `est_tokens` divides characters by four, like every other number here.
+So regroup a third time, by file, across both channels. Resolving each path cited in a command
+against `git ls-files` both validates it and drops the noise — scratch files, one-off investigation
+artefacts, anything outside the repository:
+
+```sh
+git ls-files > "$tmp/tracked"
+git ls-files -z | xargs -0 wc -c 2>/dev/null |
+  awk '$2 != "total" && NF == 2 {print $1 "\t" $2}' > "$tmp/sizes"
+
+jq -rn --slurpfile u "$tmp/uses.json" --slurpfile r "$tmp/res.json" \
+       --rawfile tracked "$tmp/tracked" --rawfile sizes "$tmp/sizes" --arg root "$(pwd)" '
+  ($tracked | split("\n") | map(select(length > 0)))                        as $T
+| ($T | INDEX(.))                                                          as $exact
+| ($T | group_by(split("/") | last) | map(select(length == 1))
+      | map({key: (.[0] | split("/") | last), value: .[0]}) | from_entries) as $byBase
+| ($sizes | split("\n") | map(select(length > 0) | split("\t"))
+          | map({key: .[1], value: (.[0] | tonumber)}) | from_entries)      as $size
+| def resolve($c):
+    ($c | ltrimstr($root + "/") | ltrimstr("./")) as $k
+    | if ($k | type) != "string" or $k == "" then null
+      elif $exact[$k] then $k
+      else ($k | split("/") | last) as $b
+           | if ($b | type) == "string" and $b != "" then $byBase[$b] else null end
+      end;
+  ($u[0] | INDEX(.id)) as $m
+| $r[0] | map(select($m[.id]) + {t: $m[.id]})
+| map({n, s: .t.s,
+       paths: ((if .t.name == "Read" then [resolve(.t.p)] else (.t.f | map(resolve(.))) end)
+               | map(select(. != null)) | unique)})
+| map(select(.paths | length > 0)) | map(.n = .n / (.paths | length))
+| map(.paths[] as $p | {p: $p, n, s})
+| group_by(.p)
+| map((($size[.[0].p] // 0) / 4 | floor) as $sz
+      | {file: .[0].p, opens: length, sessions: (map(.s) | unique | length),
+         est_tokens: ((map(.n) | add) / 4 | floor), size: $sz,
+         ratio: (if $sz > 0 then (((map(.n) | add) / 4) / $sz * 10 | floor) / 10 else null end)})
+| sort_by(-.est_tokens) | .[0:10]
+| (["file","opens","sess","est_tokens","size","ratio"] | @tsv),
+  (.[] | [.file, .opens, .sessions, .est_tokens, .size, (.ratio | tostring + "x")] | @tsv)'
+```
+
+**Read this table as a product, not a size.** `ratio` is `est_tokens / size`: how many times over the
+project paid for that file. On this repository twelve files carried 88% of the attributable volume,
+none generated, none noise, none reachable by any ignore rule. The worst case measured anywhere was
+a 489-line shell script at 5.2k tokens on disk, opened 295 times across 28 sessions for 169k tokens
+— 32× its own weight, and 19% of everything that project injected.
+
+`sessions` is the column that picks the lever, and it is the one a per-tool breakdown cannot show:
+
+- **Many opens, few sessions.** The file was the work. Nothing to fix.
+- **Many opens spread over many sessions, large file.** Sessions open the whole thing to reach one
+  part of it: split it, so the next one loads only what it needs.
+- **Many opens spread over many sessions, small file.** A 505-token manifest reopened 29 times
+  across 13 sessions answers the same one-line question every time, and splitting it or writing a
+  note elsewhere only adds a file to open. That fact belongs in resident context. If it is already
+  there and sessions keep reopening the file, the resident wording answers something other than
+  what they ask — a defect in the text rather than a matter of size.
+
+All three are proposals. Splitting a file and rewriting a CLAUDE.md are judgement calls that belong
+to whoever owns the repository — surface the measurement and the candidate, never act on it.
+
+Three figures to keep honest in the report: the window covered (how many sessions, over what date
+range), the fact that `est_tokens` divides characters by four like every other number here, and the
+fact that a command citing several files splits its cost evenly between them, which is crude and
+will flatter a file that keeps company with expensive ones.
 
 ## Step 6. Rank and report
 
@@ -259,8 +332,7 @@ rather than leaving it blank, so a reader can tell a measured zero from an unmea
 | CLAUDE.md preamble | … across … files | up to … | — (resident cost, not injected) | once, per session | high, direct read | `/doctor` checks 2–4 |
 | Glob noise | … files beyond what obeys ignore | … files hidden | … tokens via `Glob`/`Grep` results | conditional, per search | high, direct measurement | ignore-setup |
 | Largest generated files | … of the top 20 | up to … | … tokens via `Read` on those paths | conditional, per read | medium, pattern + marker heuristic, not exhaustive | ignore-setup (extend patterns) |
-| Command output | — | — | … tokens via `Bash`, top commands | conditional, per call | high, direct measurement | report only, no lever here yet |
-| Re-read files | — | — | … tokens, top paths by size × re-reads | conditional, per read | high, direct measurement | report only, no lever here yet |
+| Files re-read across sessions | … files carrying …% of attributable volume | up to … on the top … | … tokens over … opens, top paths by size × reopenings | conditional, per open | high, direct measurement | proposal only: split, document the invariant, or move the fact into resident context |
 
 State the unit once, right after the table, not per row: either "token counts via `<tool>`, a
 GPT-vocabulary approximation of Claude's real tokenizer" (Step 0bis found one) or "byte counts;
