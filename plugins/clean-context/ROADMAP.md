@@ -155,20 +155,26 @@ have. Build it once some project's per-file table puts a generated file on top.
 **CC-1, Bash output discipline** ([#5][cc1], closed) — the ticket read `Bash` at 49% of injected
 volume and blamed whole test suites, unbounded `git log`, verbose builds and `cat` on files that
 wanted `sed -n`, proposing a few lines of `CLAUDE.md` convention against them. Measuring again
-before writing anything contradicted each of those claims. Across the 50 newest sessions of three
-unrelated projects — this repository, a shell project with a test suite, and a client project — the
-named causes never reached 12% combined, and the median `Bash` call stayed between 64 and 124
-tokens, so there was no diffuse verbosity to discipline:
+before writing anything contradicted it. Across the 50 newest sessions of three unrelated projects
+— this repository, a shell project with a test suite, and a 5.1 GB Maven-plus-npm monorepo — one
+family dominates everywhere, and the ticket never named it:
 
-| `Bash` family | this repo | shell project | client project |
+| `Bash` family | markdown repo | shell project | compiled monorepo |
 |---|---|---|---|
-| reading files (`cat`, `head`, `sed -n`, chained `echo … && cat …`) | 38% | 57% | 64% |
-| `git diff` / `git show` | 21% | 19% | 3% |
-| `git log` | 7% | 3% | 4% |
-| tests and builds | 2% | 0.1% | 5% |
+| reading files (`cat`, `head`, `sed -n`, chained `echo … && cat …`) | 51% | 57% | 55% |
+| `git diff` / `git show` | 22% | 20% | 4% |
+| `git log` | 8% | 3% | 5% |
+| tests and builds | 2% | 0% | 15% |
 
-The shell project has a test suite; it accounted for 285 tokens out of 367k. `Bash` mostly carries
-files read through a shell, which puts it on the same ledger as `Read` — and the tool split itself
+Builds and `git log` together reach 10%, 3% and 19%, against a reading-files share that never
+leaves the low fifties. The monorepo is the column that matters here, since it is the one case the
+ticket described: it compiles, it carries 57 `node_modules` trees, and its build commands were
+already written the way the ticket wanted to teach — `mvn -q`, `npm run lint | tail -40`, `-Dtest=`
+scoped to two classes — with the costliest of them still injecting 1 386 tokens. Median `Bash` call
+across the three: 106, 64 and 125 tokens, so no diffuse verbosity to discipline either.
+
+`Bash` mostly carries files read through a shell, which puts it on the same ledger as `Read` — and
+the tool split itself
 never settles, coming out `Bash` 46 / `Read` 45 here, `Read` 53 / `Bash` 42 on the second project,
 `Bash` 50 / `Read` 44 on the third. Reprojected onto files, 88% of the volume here fell on twelve
 hand-written files reopened across many sessions. Step 5's aggregation produced the tool axis, and
@@ -230,7 +236,13 @@ covers it.
 
 **Narrowing `Glob` further** — more patterns, tighter defaults, a second exclusion layer. Step 5
 measured `Glob` and `Grep` at 0.4% of injected volume on this repository, so there is close to
-nothing left to win. The caveat that keeps this a "not planned" rather than a "never": this
-repository is small, mostly markdown, and has no build. A monorepo carrying `node_modules` and a
-generated client would very likely put `Glob` back near the top, which is the whole reason Step 5
-measures instead of assuming.
+nothing left to win. The caveat used to be that this repository is small, mostly markdown and has
+no build, and that a monorepo carrying `node_modules` would put `Glob` back near the top. That case
+has since been measured: a 5.1 GB Maven-plus-npm monorepo with 57 `node_modules` trees and 77
+`dist` directories came out at **0.00%**, across 17 sessions that made zero `Glob` and zero `Grep`
+calls between them.
+
+Read that as evidence about behaviour, not about `Glob`'s ceiling. Those sessions reached for
+`Bash` and `Read` instead, so the figure says the tool went unused rather than that it would have
+been cheap. It stays "not planned" on the same reasoning as before, with one fewer hypothetical
+propping it up.

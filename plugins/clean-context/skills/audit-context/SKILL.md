@@ -241,10 +241,10 @@ prefix and per file path. Report the top ten of each, and treat both as symptoms
 50 newest sessions of three unrelated projects, the split came out `Bash` 46% / `Read` 45% on this
 repository, `Read` 53% / `Bash` 42% on a shell project, `Bash` 50% / `Read` 44% on a third. The
 `Bash` breakdown holds steady where the split does not — reading files (`cat`, `head`, `sed -n`,
-and chained `echo … && cat …` dumps) took 38%, 57% and 64% of `Bash` volume on those same three,
-while test suites and builds never passed 5% and the median `Bash` call stayed under 130 tokens. Do
-not go looking for verbose command output. `Bash` mostly carries files read through a shell, which
-puts them on the same ledger as `Read`.
+and chained `echo … && cat …` dumps) took 51%, 57% and 55% of `Bash` volume on those same three,
+one of which is a 5.1 GB Maven-plus-npm monorepo where builds and tests still reached only 15%. The
+median `Bash` call ran 106, 64 and 125 tokens. Do not go looking for verbose command output: `Bash`
+mostly carries files read through a shell, which puts them on the same ledger as `Read`.
 
 So regroup a third time, by file, across both channels. Resolving each path cited in a command
 against `git ls-files` both validates it and drops the noise — scratch files, one-off investigation
