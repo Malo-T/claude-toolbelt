@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: triggers-on-post-release-request
+description: >
+  Right after a tag lands, framed as "what do we tell people" rather than "write me a changelog"
+  — the situation the skill exists for, without naming it.
+tags: [trigger, origin]
+
+execution:
+  prompt: >
+    We just cut v3.1.0. What should we tell the rest of the company changed in this release?
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    tool: Skill
+    input_match: slack-changelog
+    min: 1
+    arm: with-only

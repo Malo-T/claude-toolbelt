@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claude-toolbelt",
-  "description": "A belt of unrelated Claude Code plugins: a guided branch recap, a context hygiene setup, and two ways of surfacing a session's state outside the terminal.",
+  "description": "A belt of unrelated Claude Code plugins: a guided branch recap, a business-audience Slack changelog, a context hygiene setup, and two ways of surfacing a session's state outside the terminal.",
   "owner": {
     "name": "Malo Toanen"
   },
@@ -12,6 +12,13 @@
       "description": "Tells you what your branch actually changed — what was done, why, and what deserves a second look, instead of the diff — then files the fixes into the commits they belong to.",
       "category": "development",
       "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/branch-recap"
+    },
+    {
+      "name": "slack-changelog",
+      "source": "./plugins/slack-changelog",
+      "description": "Turns what changed in a release into a Slack changelog a non-technical audience can read — filtered to what they'd notice, one theme, one bullet per idea, no code vocabulary.",
+      "category": "development",
+      "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/slack-changelog"
     },
     {
       "name": "clean-context",

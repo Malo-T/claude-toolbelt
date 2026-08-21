@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: triggers-on-explicit-invocation
+description: >
+  The slash command itself, with a range as its argument. The easy case — makes sure the skill
+  fires when named directly rather than only from natural-language vocabulary.
+tags: [trigger, origin]
+
+execution:
+  prompt: >
+    /slack-changelog v2.4.0..HEAD
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    tool: Skill
+    input_match: slack-changelog
+    min: 1
+    arm: with-only

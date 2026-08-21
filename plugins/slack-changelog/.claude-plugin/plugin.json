@@ -1,0 +1,11 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "slack-changelog",
+  "description": "Turns what changed in a release into a Slack changelog a non-technical audience can read — filtered to what they'd notice, one theme, one bullet per idea, no code vocabulary.",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Malo Toanen"
+  },
+  "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/slack-changelog"
+}

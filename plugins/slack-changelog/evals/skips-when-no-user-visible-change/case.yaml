@@ -1,0 +1,25 @@
+schema_version: "1.0"
+name: skips-when-no-user-visible-change
+description: >
+  A request for a changelog, but framed around content the skill's own description marks as
+  invisible — internal refactor and CI only. Should still route to slack-changelog to make the
+  call (and it would then say there's nothing to post), so this is a near-miss on the OTHER
+  boundary: a technical/internal changelog explicitly asked for, not a business-audience one.
+tags: [trigger, boundary]
+
+execution:
+  prompt: >
+    Génère le changelog technique interne de cette release pour le wiki de l'équipe ingénierie :
+    liste des PRs, des modules touchés et des tickets fermés.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-stays-quiet
+    tool: Skill
+    input_match: slack-changelog
+    max: 0
+    arm: with-only

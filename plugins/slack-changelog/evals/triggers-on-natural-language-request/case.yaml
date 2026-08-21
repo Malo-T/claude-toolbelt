@@ -1,0 +1,24 @@
+schema_version: "1.0"
+name: triggers-on-natural-language-request
+description: >
+  No slash command and none of the phrases the description quotes verbatim — only the
+  predicament: a release happened, and someone outside engineering needs to be told what
+  changed, in their own language.
+tags: [trigger, origin]
+
+execution:
+  prompt: >
+    On vient de livrer la dernière version. Il faut que je dise aux équipes commerciales ce qui a
+    changé pour les utilisateurs, sans jargon technique.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    tool: Skill
+    input_match: slack-changelog
+    min: 1
+    arm: with-only

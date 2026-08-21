@@ -1,0 +1,23 @@
+schema_version: "1.0"
+name: skips-when-code-review-requested
+description: >
+  Same release, same branch, but the intent is a technical review of the code rather than a
+  message to a non-technical audience — branch-recap's job, not this skill's.
+tags: [trigger, boundary]
+
+execution:
+  prompt: >
+    Avant de merger cette release, repasse sur le code et dis-moi ce qui te semble risqué ou mal
+    fait.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-stays-quiet
+    tool: Skill
+    input_match: slack-changelog
+    max: 0
+    arm: with-only
