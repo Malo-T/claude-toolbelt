@@ -12,8 +12,8 @@ from this one repository.
 Two plugin shapes exist here:
 - **Skill plugins** (`branch-recap`, `clean-context`): a `skills/<name>/SKILL.md` plus optional
   `evals/`. No hooks.
-- **Hook plugins** (`status-icons`, `status-sounds`): a `hooks/hooks.json` wiring lifecycle events
-  to scripts, no skill.
+- **Hook plugins** (`status-icons`, `status-sounds`, `compact-nudge`): a `hooks/hooks.json`
+  wiring lifecycle events to scripts, no skill.
 
 ## Commands
 

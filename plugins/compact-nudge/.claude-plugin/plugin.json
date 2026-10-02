@@ -1,0 +1,11 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "compact-nudge",
+  "description": "Suggests /compact or /clear when the context grows past a threshold or the prompt cache has gone cold, since every request re-reads the whole context.",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Malo Toanen"
+  },
+  "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/compact-nudge"
+}
