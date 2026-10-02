@@ -2,8 +2,9 @@
 
 Claude Code plugins, each taking on a point of friction in the day-to-day loop: knowing where the
 session stands without watching it, keeping the noise out of what Claude reads, going back over
-your own work before anyone else does. What they have in common is the intent, not a domain — they
-are the things that were missing often enough to be worth writing.
+your own work before anyone else does, telling the rest of the company what a release changed. What
+they have in common is the intent, not a domain — they are the things that were missing often
+enough to be worth writing.
 
 One marketplace publishes them all, so adding a plugin is one command rather than one more
 marketplace. Each stays independent: install the one you want, ignore the rest.
@@ -13,6 +14,7 @@ marketplace. Each stays independent: install the one you want, ignore the rest.
 | [`branch-recap`](plugins/branch-recap) | Tells you what your unmerged branch actually changed — what was done, why, and what deserves a second look, instead of the diff — then closes on one question set and files the fixes into the commits they belong to. |
 | [`compact-nudge`](plugins/compact-nudge) | Suggests `/compact` or `/clear` when the context crosses a size threshold, and holds a prompt once when a large context is about to be sent with a cold cache. |
 | [`clean-context`](plugins/clean-context) | Measures where a project's context budget is going, then keeps the noise — lockfiles, generated code, binaries — out of Claude's default file discovery, while leaving every excluded path one explicit `Read` away. |
+| [`slack-changelog`](plugins/slack-changelog) | Turns a release's diff into a Slack message for a non-technical audience: only what they would notice, grouped by theme, no code vocabulary. It drafts the text and never posts it. |
 | [`status-icons`](plugins/status-icons) | Marks the terminal tab with an icon that tells "it is done" apart from "it is blocked on you", where Claude Code shows the same `✳` for both. |
 | [`status-sounds`](plugins/status-sounds) | Plays a short sound when Claude has finished, has failed, or wants something from you. |
 
@@ -177,6 +179,7 @@ plugins/
 ├── branch-recap/                 # skill
 ├── clean-context/                 # skill + references + evals
 ├── compact-nudge/                 # hooks
+├── slack-changelog/               # skill + references + evals
 ├── status-icons/                  # hooks
 └── status-sounds/                 # hooks
 scripts/                           # pre-push checks that no CLI covers
