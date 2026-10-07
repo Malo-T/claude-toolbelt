@@ -18,8 +18,8 @@ Architecture section):
 ./scripts/check-watcher-parity.sh
 ```
 
-Run a plugin's skill evals (currently authored but unrun — `claude plugin eval` is early access
-and refuses to run on this account):
+Run a plugin's skill evals. `claude plugin eval` is early access and may refuse to run on your
+account:
 
 ```sh
 claude plugin eval plugins/<name> --ablation with-without
