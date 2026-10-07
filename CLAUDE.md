@@ -1,19 +1,11 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## What this repository is
 
 A Claude Code plugin marketplace. `.claude-plugin/marketplace.json` is the single marketplace,
 listing every plugin under `plugins/`; there is no separate marketplace per plugin and none should
 be added. Each plugin is independent — installable and usable on its own — but they all publish
 from this one repository.
-
-Two plugin shapes exist here:
-- **Skill plugins** (`branch-recap`, `clean-context`): a `skills/<name>/SKILL.md` plus optional
-  `evals/`. No hooks.
-- **Hook plugins** (`status-icons`, `status-sounds`, `compact-nudge`): a `hooks/hooks.json`
-  wiring lifecycle events to scripts, no skill.
 
 ## Commands
 
@@ -23,7 +15,7 @@ this repository.
 ## Architecture
 
 **The status-icons/status-sounds duplication is deliberate, not an oversight.** Both plugins ship
-their own byte-for-byte copy of `hooks/watch.sh` (a background poller keyed off
+their own copy of `hooks/watch.sh` (a background poller keyed off
 `<config>/sessions/<pid>.json`) because the two plugins install independently and must share
 nothing — no common dependency, no shared package. The cost is that every fix to the watcher has to
 be applied twice, which is exactly what `scripts/check-watcher-parity.sh` guards against: it strips
