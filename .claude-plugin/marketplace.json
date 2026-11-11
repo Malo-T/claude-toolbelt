@@ -47,6 +47,13 @@
       "description": "Suggests /compact or /clear when the context crosses a size threshold, and holds a prompt once when a large context is about to be sent with a cold cache.",
       "category": "productivity",
       "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/compact-nudge"
+    },
+    {
+      "name": "handoff",
+      "source": "./plugins/handoff",
+      "description": "Writes a handoff file so a fresh session can continue where this one stopped, and resumes from it automatically after /clear.",
+      "category": "productivity",
+      "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/handoff"
     }
   ]
 }

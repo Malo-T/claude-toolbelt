@@ -1,0 +1,11 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "handoff",
+  "description": "Writes a handoff file (goal, findings, decisions, next step) so a fresh session can pick the work up, and resumes from it automatically after /clear.",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Malo Toanen"
+  },
+  "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/handoff"
+}
