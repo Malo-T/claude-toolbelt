@@ -16,6 +16,7 @@ runs: 3
 graders:
   - type: tool_used
     name: skill-stays-quiet
+    min: 0
     max: 0
     tool: Skill
     input_match: handoff

@@ -4,17 +4,20 @@ A long session gets expensive and noisy. `/compact` summarises for you and keeps
 important; a handoff lets you decide what the next session starts from.
 
 The `/handoff` skill writes a file with the goal, what is done, what was ruled out, the decisions,
-the uncommitted files and the next step. It then records the file as pending for the current
-directory. After you type `/clear`, a `SessionStart` hook tells the fresh session to resume from it.
+the uncommitted files and the next step. A mod then runs `/clear` once the turn ends and submits
+"resume from this handoff" in the fresh session. Nothing resumes unless a handoff was just written:
+a plain `/clear` stays a plain `/clear`.
 
 | Piece | What it does |
 |---|---|
-| `skills/handoff` | Writes the handoff under `<config>/handoffs/<repo>/`, or resumes from one |
-| `skills/handoff/scripts/mark-pending.sh` | Records the file as pending for the directory |
-| `hooks/resume.sh` | On `SessionStart` after `/clear`, injects the resume instruction |
+| `skills/handoff` | Writes the handoff under `<config>/handoffs/<project>/`, or resumes from one |
+| `hooks/handoff.ts` | Mod: watches for that file, then runs `/clear` and the resume prompt at the end of the turn |
 
-A hook cannot run `/clear`, so you type it. A pending marker older than an hour is ignored, and a
-handoff written "for later" (`.later.md`) never gets one.
+A handoff named `<name>.later.md` is for another day: the mod ignores it and the session goes on.
+Resume it yourself with `/handoff <path>`.
+
+The mod API (`claude-code` module) is early access and moves between Claude Code releases. If
+`/clear` or the prompt fails, a toast gives the file path and you resume by hand.
 
 Pairs with `compact-nudge`, which tells you when the context is big enough to warrant one.
 

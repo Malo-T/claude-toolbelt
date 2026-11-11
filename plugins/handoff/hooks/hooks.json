@@ -1,17 +1,1 @@
-{
-  "description": "After /clear, resumes from the handoff file the previous session left pending in this directory.",
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "clear",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/resume.sh\"",
-            "timeout": 10
-          }
-        ]
-      }
-    ]
-  }
-}
+{ "modules": ["./handoff.ts"] }

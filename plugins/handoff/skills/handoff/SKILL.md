@@ -14,7 +14,7 @@ Two modes. Write is the default; resume applies when the user gives a path or as
 
 `${CLAUDE_CONFIG_DIR:-~/.claude}/handoffs/<repo-or-directory-name>/<YYYY-MM-DD-HHmm>-<short-slug>.md`
 
-Outside the repo, so git stays clean. For a handoff the user will pick up later ("tomorrow", "later"), use the suffix `.later.md` and skip step 3. If unsure which variant is wanted, ask before writing.
+Outside the repo, so git stays clean. For a handoff the user will pick up later ("tomorrow", "later"), use the suffix `.later.md`: the plugin then leaves the session alone, so skip step 3. If unsure which variant is wanted, ask before writing.
 
 ### 2. Content
 
@@ -48,9 +48,9 @@ Written <date and time> from <cwd>, branch <branch>.
 
 If the user wants only part of the work carried over, put the scope at the top, develop only that part, and list the rest under "Out of scope", one line per topic. "Uncommitted changes" still lists every modified file, in scope or not, so nothing is lost or committed by mistake.
 
-### 3. Make resume automatic
+### 3. Hand over to the plugin
 
-Run `bash "${CLAUDE_SKILL_DIR}/scripts/mark-pending.sh" <file>`. It records the file as pending for this directory. Then tell the user to type `/clear`: the plugin's SessionStart hook injects the resume instruction into the fresh session. A hook cannot run `/clear` itself.
+Write nothing else and run nothing. The plugin's mod notices the file written under `handoffs/`, and once your turn ends it runs `/clear` and submits the resume prompt in the fresh session. End the turn with one line naming the file; do not tell the user to type `/clear`.
 
 ## Resume mode
 
