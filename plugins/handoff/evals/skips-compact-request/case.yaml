@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: skips-compact-request
+description: >
+  Same worry about context size, but the user names the tool: compaction. The skill is
+  presented as an alternative to /compact, not a replacement for being asked for it.
+tags: [trigger, boundary]
+
+execution:
+  prompt: >
+    Compacte la conversation pour libérer du contexte, on continue juste après.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-stays-quiet
+    max: 0
+    tool: Skill
+    input_match: handoff
+    arm: with-only

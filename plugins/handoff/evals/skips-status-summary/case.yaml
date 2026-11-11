@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: skips-status-summary
+description: >
+  A summary of the day, but for a human reader. Nothing is carried to a fresh session, so no
+  handoff file belongs here.
+tags: [trigger, boundary]
+
+execution:
+  prompt: >
+    Résume ce qu'on a fait aujourd'hui en trois lignes pour mon manager.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-stays-quiet
+    max: 0
+    tool: Skill
+    input_match: handoff
+    arm: with-only

@@ -1,0 +1,23 @@
+schema_version: "1.0"
+name: triggers-on-partial-scope
+description: >
+  Partial scope: only one topic is to be carried over, the rest left behind. The description
+  covers it in one clause and nothing else quotes it.
+tags: [trigger, scope]
+
+execution:
+  prompt: >
+    Prépare-moi de quoi reprendre dans une session vierge, mais seulement sur la partie migration
+    des sessions. Le reste, on le laisse de côté.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    min: 1
+    tool: Skill
+    input_match: handoff
+    arm: with-only

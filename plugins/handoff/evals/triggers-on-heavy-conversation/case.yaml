@@ -1,0 +1,23 @@
+schema_version: "1.0"
+name: triggers-on-heavy-conversation
+description: >
+  The situation the skill was built for: a conversation that has grown heavy and slow, with work
+  worth keeping. No "handoff", no "/clear", none of the phrases the description quotes.
+tags: [trigger, origin]
+
+execution:
+  prompt: >
+    Cette conversation est devenue énorme, chaque réponse met un temps fou. Je voudrais repartir
+    sur du propre sans perdre ce qu'on a établi ni ce qu'il reste à faire.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    min: 1
+    tool: Skill
+    input_match: handoff
+    arm: with-only

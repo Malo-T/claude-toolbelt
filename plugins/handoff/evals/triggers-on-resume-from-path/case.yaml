@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: triggers-on-resume-from-path
+description: >
+  Resume mode: a path to a file written by an earlier session, no skill name in the prompt.
+tags: [trigger, resume]
+
+execution:
+  prompt: >
+    Les notes de la session précédente sont dans ~/.claude/handoffs/orchestrator/2026-11-11-2200-migration.md,
+    on reprend à partir de là.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    min: 1
+    tool: Skill
+    input_match: handoff
+    arm: with-only

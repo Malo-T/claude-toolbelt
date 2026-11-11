@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: skips-branch-reading
+description: >
+  "Reprends" and "ma branche" sound like resuming work, but the ask is to read what a branch
+  changed. That belongs to branch-recap, not to a session handoff.
+tags: [trigger, boundary]
+
+execution:
+  prompt: >
+    Reprends ma branche depuis le début et dis-moi ce que j'ai changé.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-stays-quiet
+    max: 0
+    tool: Skill
+    input_match: handoff
+    arm: with-only

@@ -1,0 +1,22 @@
+schema_version: "1.0"
+name: skips-project-note
+description: >
+  Recording a decision for the future, but in the project's own instructions file. A handoff is
+  one session's state, not a standing convention.
+tags: [trigger, boundary]
+
+execution:
+  prompt: >
+    Note dans le CLAUDE.md du projet la convention qu'on vient de décider pour les messages de commit.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-stays-quiet
+    max: 0
+    tool: Skill
+    input_match: handoff
+    arm: with-only

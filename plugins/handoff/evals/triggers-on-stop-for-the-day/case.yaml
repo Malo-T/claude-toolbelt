@@ -1,0 +1,23 @@
+schema_version: "1.0"
+name: triggers-on-stop-for-the-day
+description: >
+  The "later" variant, in English, without "handoff" or "tomorrow": someone stopping and
+  wanting to pick up without re-explaining. The wording has to carry it.
+tags: [trigger, later]
+
+execution:
+  prompt: >
+    I'm done for today. Leave me something so I can pick this up on Monday without having to
+    explain everything again.
+  max_turns: 6
+  allowed_tools: []
+
+runs: 3
+
+graders:
+  - type: tool_used
+    name: skill-fires
+    min: 1
+    tool: Skill
+    input_match: handoff
+    arm: with-only
