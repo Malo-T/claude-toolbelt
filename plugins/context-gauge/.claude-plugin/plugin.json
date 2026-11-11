@@ -1,0 +1,31 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "context-gauge",
+  "description": "Keeps a status line under the prompt with the context size, a warning icon past two thresholds, the time left on the prompt cache and the session's age.",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Malo Toanen"
+  },
+  "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/context-gauge",
+  "userConfig": {
+    "warnTokens": {
+      "type": "number",
+      "title": "Warning threshold (tokens)",
+      "description": "Context size that turns the icon to a warning. 0 = 150k, capped at 60% of the model's window.",
+      "default": 0
+    },
+    "critTokens": {
+      "type": "number",
+      "title": "Critical threshold (tokens)",
+      "description": "Context size that turns the icon to a stop sign. 0 = 400k, capped at 80% of the model's window.",
+      "default": 0
+    },
+    "cacheTtlMinutes": {
+      "type": "number",
+      "title": "Prompt cache lifetime (minutes)",
+      "description": "Counted from the end of the last main-thread turn. 60 on a subscription, 5 on an API key. 0 hides the countdown.",
+      "default": 60
+    }
+  }
+}

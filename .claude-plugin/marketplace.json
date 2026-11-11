@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claude-toolbelt",
-  "description": "A belt of unrelated Claude Code plugins: a guided branch recap, a business-audience Slack changelog, a context hygiene setup, a compaction reminder, a session handoff, and two ways of surfacing a session's state outside the terminal.",
+  "description": "A belt of unrelated Claude Code plugins: a guided branch recap, a business-audience Slack changelog, a context hygiene setup, a compaction reminder, a context gauge, a session handoff, and two ways of surfacing a session's state outside the terminal.",
   "owner": {
     "name": "Malo Toanen"
   },
@@ -54,6 +54,13 @@
       "description": "Writes a handoff file so a fresh session can continue where this one stopped, then clears the session and resumes from it.",
       "category": "productivity",
       "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/handoff"
+    },
+    {
+      "name": "context-gauge",
+      "source": "./plugins/context-gauge",
+      "description": "Keeps a status line under the prompt with the context size, a warning icon past two thresholds, the time left on the prompt cache and the session's age.",
+      "category": "productivity",
+      "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/context-gauge"
     }
   ]
 }
