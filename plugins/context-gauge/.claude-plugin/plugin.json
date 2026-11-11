@@ -1,7 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "context-gauge",
-  "description": "Keeps a status line under the prompt with the context size, a warning icon past two thresholds, the time left on the prompt cache and the session's age.",
+  "description": "Adds a gauge to the line under the prompt with the context size, a warning icon past two thresholds, the time left on the prompt cache and the session's age.",
+  "types": "./types/index.d.ts",
   "version": "1.0.0",
   "license": "MIT",
   "author": {

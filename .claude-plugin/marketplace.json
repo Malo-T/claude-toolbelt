@@ -58,7 +58,7 @@
     {
       "name": "context-gauge",
       "source": "./plugins/context-gauge",
-      "description": "Keeps a status line under the prompt with the context size, a warning icon past two thresholds, the time left on the prompt cache and the session's age.",
+      "description": "Adds a gauge to the line under the prompt with the context size, a warning icon past two thresholds, the time left on the prompt cache and the session's age.",
       "category": "productivity",
       "homepage": "https://github.com/Malo-T/claude-toolbelt/tree/main/plugins/context-gauge"
     }

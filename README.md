@@ -13,7 +13,7 @@ marketplace. Each stays independent: install the one you want, ignore the rest.
 |---|---|
 | [`branch-recap`](plugins/branch-recap) | Tells you what your unmerged branch actually changed — what was done, why, and what deserves a second look, instead of the diff — then closes on one question set and files the fixes into the commits they belong to. |
 | [`compact-nudge`](plugins/compact-nudge) | Suggests `/compact` or `/clear` when the context crosses a size threshold, and holds a prompt once when a large context is about to be sent with a cold cache. |
-| [`context-gauge`](plugins/context-gauge) | Keeps a status line under the prompt with the context size, a warning icon past two thresholds, the time left on the prompt cache and the session's age. |
+| [`context-gauge`](plugins/context-gauge) | Adds a gauge to the line under the prompt with the context size, a warning icon past two thresholds, the time left on the prompt cache and the session's age. |
 | [`handoff`](plugins/handoff) | Writes a handoff file (goal, findings, decisions, next step) so a fresh session can continue where this one stopped, then clears the session and resumes from it. |
 | [`clean-context`](plugins/clean-context) | Measures where a project's context budget is going, then keeps the noise — lockfiles, generated code, binaries — out of Claude's default file discovery, while leaving every excluded path one explicit `Read` away. |
 | [`slack-changelog`](plugins/slack-changelog) | Turns a release's diff into a Slack message for a non-technical audience: only what they would notice, grouped by theme, no code vocabulary. It drafts the text and never posts it. |

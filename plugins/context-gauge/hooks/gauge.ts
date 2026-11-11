@@ -1,4 +1,7 @@
+import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
+
+const line = atom({ plugin: 'context-gauge', key: 'line' } as const, null)
 
 const MINUTE = 60_000
 const REFRESH_MS = 30_000
@@ -50,7 +53,8 @@ async function refresh($: EngineInterface): Promise<void> {
   }
 
   const size = used === undefined ? `ctx –/${tokens(window)}` : `ctx ${tokens(used)}/${tokens(window)} (${percent}%)`
-  $.ui.status(`${icon}${size}${cacheSegment(used ?? 0, now)} · session ${age(now - startedAt)}`)
+  const text = `${icon}${size}${cacheSegment(used ?? 0, now)} · session ${age(now - startedAt)}`
+  await update($, line, () => text)
 }
 
 async function safeRefresh($: EngineInterface): Promise<void> {
@@ -69,6 +73,13 @@ export const register: Register = (on, options) => {
   warnSetting = Number(options.warnTokens ?? 0)
   critSetting = Number(options.critTokens ?? 0)
   ticking = false
+
+  // One place only: the end of the hint line under the prompt, its pills left alone.
+  // ($.ui.status would draw a second copy, a pinned notice prefixed with a warning sign.)
+  on('ui.render', { component: 'PromptHint' }, async ($, e, next) => {
+    const text = await read($, line)
+    return text === null ? next(e) : next({ ...e, props: { ...e.props, tail: text } })
+  })
 
   on('session.start', async ($, e, next) => {
     const started = await next(e)

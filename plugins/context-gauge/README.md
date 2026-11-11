@@ -1,7 +1,8 @@
 # context-gauge
 
 Every request re-reads the whole context, and the prompt cache that makes it cheap expires when you
-step away. This plugin keeps one line under the prompt so you see both without asking:
+step away. This plugin adds a gauge at the end of the hint line under the prompt (the one with the
+mode and shortcuts), so you see both without asking:
 
 ```
 🟢 ctx 12k/200k (6%) · session 8min
@@ -17,7 +18,8 @@ step away. This plugin keeps one line under the prompt so you see both without a
 | `session` | Time since the session started; `/clear` restarts it. |
 
 The cache countdown starts at the end of each main-thread turn and stays hidden under 50k tokens,
-where a cold cache costs little. A mod redraws the line after each turn and every 30 seconds.
+where a cold cache costs little. A mod redraws the gauge after each turn and every 30 seconds. It
+draws it once: the engine's own status line (`$.ui.status`) shows a second copy, so the mod avoids it.
 
 ## Settings
 
