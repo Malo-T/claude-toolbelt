@@ -77,7 +77,7 @@ Typing four flags gets old, so key them on the directory instead (zsh):
 
 ```zsh
 claude() {
-	local root=$HOME/workspace/claude/claude-toolbelt
+	local root=$HOME/workspace/perso/claude-toolbelt
 	if [[ $PWD/ == $root/* ]]; then
 		setopt localoptions null_glob
 		local -a flags
@@ -105,7 +105,7 @@ into the cache, so an edit only lands after an explicit `claude plugin update` â
 rehearsing a release, not for iterating:
 
 ```sh
-claude plugin marketplace add ~/workspace/claude/claude-toolbelt
+claude plugin marketplace add ~/workspace/perso/claude-toolbelt
 ```
 
 Or, for a skill-only plugin, symlink it into the skills directory â€” any directory in
