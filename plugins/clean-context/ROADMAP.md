@@ -202,6 +202,13 @@ session of every project, against savings on the order of 140 tokens once, in a 
 chars/4 estimate that first made the case said 254, so the real balance was worse than the one that
 retired it.
 
+**Update 2026-11-26.** Finding 1 holds for schemas only. A headless A/B on a setup with about 300
+deferred MCP tools measured 9.6k tokens (45.5k against 35.9k at the first request) that
+`--strict-mcp-config` removes: tool names and server instructions stay resident. Across 74
+background sessions not one MCP tool was called, so for sessions launched by a script the flag is a
+safe cut. `audit-context` Steps 4bis and 5bis now measure both. The decision not to write
+`disabledMcpjsonServers` stands: `/doctor` still owns that.
+
 Two corrections worth keeping from it:
 
 - **A user-scope server can be disabled per project.** `/mcp disable <server>` persists to

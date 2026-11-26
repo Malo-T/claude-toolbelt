@@ -12,7 +12,10 @@ Measures where a project's context budget is actually going, before any of the o
 it: what `Glob` discovers with and without ignore files applied, the twenty largest files in the
 repo and which are generated, the cumulative size of every `CLAUDE.md` loaded for the working
 directory, and how many MCP servers and tools are enabled — separating tool schemas that are
-actually resident from the ones deferred behind `ToolSearch`, which cost about nothing.
+actually resident from the ones deferred behind `ToolSearch`. A deferred tool's schema costs
+about nothing, but its name and its server's instructions do not: a headless A/B of the starting
+context (with and without MCP servers and skills) puts a number on that, and a per-server count of
+calls over all transcripts shows which servers were never called, and whether one fails to start.
 
 Then it stops estimating and measures. Joining `tool_use` to `tool_result` across the newest 50
 transcripts tells you what past sessions really pulled in, per tool, per command and per file. On

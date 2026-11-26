@@ -1,6 +1,6 @@
 ---
 name: audit-context
-description: Measures where a project's Claude context is going before applying any of clean-context's levers. Reports what Glob discovers with and without ignore files applied, the twenty largest files in the repo and which are generated, the cumulative size of every CLAUDE.md loaded for this working directory, and how many MCP servers/tools are enabled. Then measures what past sessions really injected, per tool, command and file, from this project's own transcripts. Ranks the levers by estimated gain, each pointing at the skill that applies it. Read-only, writes nothing. Use when someone asks to measure or audit context bloat, "pourquoi mon contexte est plein", "combien pèse mon CLAUDE.md", "which of these should I clean first" before running ignore-setup blind, or when asked generally to optimize or reduce context usage. Skip for a request to actually apply a fix (ignore-setup's job) or to improve CLAUDE.md's content quality or wording (claude-md-management:claude-md-improver's job, not its size).
+description: Measures where a project's Claude context is going before applying any of clean-context's levers. Reports what Glob discovers with and without ignore files applied, the twenty largest files in the repo and which are generated, the cumulative size of every CLAUDE.md loaded for this working directory, and how many MCP servers/tools are enabled. Then measures what past sessions really injected, per tool, command and file, from this project's own transcripts, measures the real starting context with and without MCP servers and skills (headless A/B), and lists which MCP servers were never called or fail to start. Ranks the levers by estimated gain, each pointing at the skill that applies it. Read-only, writes nothing. Use when someone asks to measure or audit context bloat, "pourquoi mon contexte est plein", "combien pèse mon CLAUDE.md", "which of these should I clean first" before running ignore-setup blind, or when asked generally to optimize or reduce context usage. Skip for a request to actually apply a fix (ignore-setup's job) or to improve CLAUDE.md's content quality or wording (claude-md-management:claude-md-improver's job, not its size).
 ---
 
 # Audit Context
@@ -166,9 +166,10 @@ schema on demand, so fifty deferred tools cost a few hundred tokens against the 
 resident set would. Read your own context to tell the two apart: deferred tools arrive as a
 names-only list in a system-reminder, resident ones carry full schemas in the tool list. A server
 opts out per tool via `anthropic/alwaysLoad` in the tool's `_meta`, which the server decides and no
-setting here overrides. Count only the names for a deferred server, report its resident cost as
-roughly zero, and never present it as a context saving waiting to be made. Its one honest signal is
-invocation count, and that measurement belongs to `/doctor`'s check 1.
+setting here overrides. A deferred server's *schemas* cost roughly zero, but its tool names and its
+`instructions` block are still resident, and no disk read prices them: do not quote "roughly zero"
+for the whole server. Step 4bis measures the real figure, and Step 5bis crosses the server against
+the calls it actually received.
 
 Two health lines change what a count means:
 
@@ -182,6 +183,34 @@ Two health lines change what a count means:
 
 This measurement is a session snapshot, not a fact of configuration. Timestamp it in the report
 and keep it visually distinct from Steps 1 through 3, which are deterministic filesystem reads.
+
+## Step 4bis. The real starting context, measured A/B
+
+Names-only lists of deferred tools and the `instructions` block each server adds are resident even
+when no schema is. They show up in no file on disk, so measure them: three one-turn headless runs in
+the project root, then compare the input of the first request.
+
+```sh
+for v in "" "--strict-mcp-config" "--strict-mcp-config --disable-slash-commands"; do
+  claude -p 'Reply with: ok' --output-format json --no-session-persistence $v \
+    | jq '.usage | .input_tokens + .cache_creation_input_tokens + .cache_read_input_tokens'
+done
+```
+
+Ask before running: each run is a real model call that writes about 40k tokens to the cache, and it
+starts hooks and MCP servers. Add `--model <the model the sessions use>` so the figure matches.
+Sum the three usage fields, since a warm cache moves tokens from one field to another between runs.
+
+- first minus second = what the MCP servers add (tool names and server instructions);
+- second minus third = the skills listing;
+- third = the floor: system prompt, built-in tools, `CLAUDE.md` files, hooks.
+
+It is one sample per variant, so say so. On a setup with about 300 deferred MCP tools it came out at
+45.5k, 35.9k and 23.8k tokens: the deferral does not make the MCP surface free.
+
+Price the delta against session length, not against one request: the starting context is written
+once and re-read on every request, so its weight grows with the number of requests per session
+(Step 5 gives it). A session of 40 requests pays a starting token about 5 times its write price.
 
 ## Step 5. What past sessions actually cost
 
@@ -312,6 +341,33 @@ range), the fact that `est_tokens` divides characters by four like every other n
 fact that a command citing several files splits its cost evenly between them, which is crude and
 will flatter a file that keeps company with expensive ones.
 
+## Step 5bis. MCP servers: called, never called, or broken
+
+Count the calls each configured server received, over every transcript under `~/.claude/projects`
+(cap at the 500 newest, state the cap). A `tool_use` named `mcp__<server>__<tool>` is a call; a name
+that only appears in a deferred-tools list is not.
+
+```sh
+jq -r 'select(.type=="assistant") | .message.content[]? | select(.type=="tool_use")
+       | .name | select(startswith("mcp__")) | split("__")[1]' "$f" | sort | uniq -c
+```
+
+Also count the `ToolSearch` calls whose query names the server: a deferred server never searched for
+is a server the agent never tried. Sort each server into one of three verdicts:
+
+- **Called**: keep it, nothing to report.
+- **Never called**: a candidate to drop from background sessions (`--strict-mcp-config`) or per
+  project (`/mcp disable`). Applying it is `/doctor`'s job. Check whether any `CLAUDE.md`, rule or
+  skill tells the agent when to use it: a server nothing mentions rarely beats `Bash`, `Read` and
+  `Edit`.
+- **Never called, and meant for development** (a language-server or code-navigation server): it may
+  be broken rather than ignored, and the fix differs. Ask first, then probe once with a headless run
+  that loads one cheap read-only tool and calls it, and read the server's own log for the error. On
+  one setup a Java code-navigation server had zero calls in 375 transcripts and failed at its
+  language-server start, which nobody had noticed.
+
+Report the probe's result as measured, and never conclude "broken" from zero calls alone.
+
 ## Step 6. Rank and report
 
 Tag each lever with its cost shape before ranking anything, since the units differ in kind:
@@ -328,7 +384,9 @@ rather than leaving it blank, so a reader can tell a measured zero from an unmea
 
 | Lever | Current cost | Est. gain | Observed (Step 5) | Cost shape | Confidence | Where the fix lives |
 |---|---|---|---|---|---|---|
-| MCP tool schemas | … servers, … tools, of which … resident | … resident tools; deferred ones ≈ 0 | — (resident cost, not injected) | recurring only if resident | low-medium, session snapshot, see Step 4 caveats | `/doctor` check 1 |
+| MCP tool schemas | … servers, … tools, of which … resident | … resident tools; deferred schemas ≈ 0 | — (resident cost, not injected) | recurring only if resident | low-medium, session snapshot, see Step 4 caveats | `/doctor` check 1 |
+| MCP surface at start (names + instructions) | … tokens, first minus second run of Step 4bis | up to that figure, times session length | n/a (resident cost) | once written, re-read every request | medium, one sample per variant | `--strict-mcp-config` for background sessions, `/doctor` check 1 otherwise |
+| MCP servers never called | … of … servers, per Step 5bis | their share of the line above | … calls over … transcripts | recurring | high for the count, low for the cause | `/doctor` check 1; a broken server is a fix on its own side |
 | CLAUDE.md preamble | … across … files | up to … | — (resident cost, not injected) | once, per session | high, direct read | `/doctor` checks 2–4 |
 | Glob noise | … files beyond what obeys ignore | … files hidden | … tokens via `Glob`/`Grep` results | conditional, per search | high, direct measurement | ignore-setup |
 | Largest generated files | … of the top 20 | up to … | … tokens via `Read` on those paths | conditional, per read | medium, pattern + marker heuristic, not exhaustive | ignore-setup (extend patterns) |
